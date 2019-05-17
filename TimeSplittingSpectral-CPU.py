@@ -34,14 +34,13 @@ def reduceIntegrate(waveFunction):
     
     return np.sum(np.abs(waveFunction)**2, axis=(0,1))*hx*hy
     
-def realTimePropagation(psi_initial):
+def realTimePropagation(solution):
     """
     This function numerically solves the GPE in real time using the spectral method
     
     """
     
-    solution = np.copy(psi_initial)
-    psiPlot = np.array([reduceIntegrate(psi_initial)]) # Index Convention: psiPlot[time idx][space idx]
+    psiPlot = np.array([reduceIntegrate(solution)]) # Index Convention: psiPlot[time idx][space idx]
     mux = 2*np.pi/LX * np.arange(-NX/2, NX/2)
     muy = 2*np.pi/LY * np.arange(-NY/2, NY/2)
     muz = 2*np.pi/LZ * np.arange(-NZ/2, NZ/2)
@@ -55,8 +54,7 @@ def realTimePropagation(psi_initial):
     for p in range(TIME_PTS):
         
         # Step One -- potential and interaction term
-        test = np.copy(solution)
-        expTerm = np.exp(-1j* (potential + G*np.abs(test)**2)*dt/2.0)
+        expTerm = np.exp(-1j* (potential + G*np.abs(solution)**2)*dt/2.0)
         solution = expTerm*solution
                     
         # Step Two -- kinetic term
@@ -161,10 +159,10 @@ print(f'Grid Points = {NX*NY*NZ}')
 #plt.xlabel('Time')
 
 
-#xx,tt = np.meshgrid(z,np.arange(TIME_PTS+1)*dt)
-#fig = plt.figure(2)   # Clear figure 2 window and bring forward
-#ax = fig.gca(projection='3d')
-#surf = ax.plot_surface(xx, tt, psiPlot, rstride=1, cstride=1, cmap=cm.jet,linewidth=0, antialiased=False)
-#ax.set_xlabel('Position')
-#ax.set_ylabel('Time')
-#ax.set_zlabel('Amplitude)')
+xx,tt = np.meshgrid(z,np.arange(TIME_PTS+1)*dt)
+fig = plt.figure(2)   # Clear figure 2 window and bring forward
+ax = fig.gca(projection='3d')
+surf = ax.plot_surface(xx, tt, psiPlot, rstride=1, cstride=1, cmap=cm.jet,linewidth=0, antialiased=False)
+ax.set_xlabel('Position')
+ax.set_ylabel('Time')
+ax.set_zlabel('Amplitude)')
