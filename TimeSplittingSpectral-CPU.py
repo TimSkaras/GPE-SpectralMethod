@@ -52,9 +52,6 @@ def realTimePropagation(psi_initial):
                               np.exp(0.5*WZ**2*(z-(za+zb)/2.)**2))
     potential = np.log(potential) 
     
-    fourierCoeffsManual = np.zeros((NX, NY, NZ), dtype=np.complex_)
-    invFourier = np.zeros((NX, NY, NZ), dtype=np.complex_)
-    
     for p in range(TIME_PTS):
         
         # Step One -- potential and interaction term
