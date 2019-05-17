@@ -59,7 +59,6 @@ def realTimePropagation(psi_initial):
         expTerm = np.exp(-1j* (potential + G*np.abs(test)**2)*dt/2.0)
         solution = expTerm*solution
                     
-                    
         # Step Two -- kinetic term
         fourierCoeffs = np.fft.fftn(solution)
         fourierCoeffs = fourierCoeffs*muExpTerm
