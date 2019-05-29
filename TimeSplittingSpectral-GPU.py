@@ -16,8 +16,7 @@ import cupy as cp
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
-import numba
-from numba import jit
+from matplotlib import animation
 import timeit
 
 def getNorm(waveFunction):
@@ -63,7 +62,7 @@ def realTimePropagation(solution):
     for p in range(TIME_PTS):
         
         # Step One -- potential and interaction term
-        expTerm = cp.exp(-1j* (potential + G*cp.abs(solution)**2)*dt/2.0)
+        expTerm = cp.exp(-1j* (potential + GFunc(p*dt)*cp.abs(solution)**2)*dt/2.0)
         solution = expTerm*solution
                     
                     
@@ -73,7 +72,7 @@ def realTimePropagation(solution):
         solution = cp.fft.ifftn(fourierCoeffs)
         
         # Step Three -- potential and interaction term again
-        expTerm = cp.exp(-1j* (potential + G*cp.abs(solution)**2)*dt/2.0)
+        expTerm = cp.exp(-1j* (potential + GFunc(p*dt)*cp.abs(solution)**2)*dt/2.0)
         solution = expTerm*solution
         
         # Save Solution for plotting
@@ -86,6 +85,12 @@ def realTimePropagation(solution):
 
 # ----------- Important variables --------------
 
+surf_plot_on = 0
+
+# Animation Input Parameters
+animation_on = 1
+animation_filename = 'animation.mp4' # filename for animation output
+
 # Spatial Points
 N = 32
 NX = N
@@ -93,12 +98,12 @@ NY = N
 NZ = 512
 
 # Trap length
-L = 8.0
+L = 12.0
 LX = L
 LY = L
-LZ = L
+LZ = 375.0
 
-TIME = 8.0
+TIME = 20.0
 
 # Start and end points in space
 xa = -LX/2
@@ -113,15 +118,20 @@ hx = LX/NX
 hy = LY/NY
 hz = LZ/NZ
 
-TIME_PTS = 100
+TIME_PTS = 1400
+RED_COEFF = 1
 
 dt = TIME/TIME_PTS
-G = 10. # interaction strength parameter
+OMEGA = 2.0
+EPS = 0.2
+MOD_TIME = 5*np.pi
+G = 1070.
+GFunc = lambda t: (G* (1.0 + EPS*np.sin(OMEGA*t)) if t < MOD_TIME else G) # interaction strength parameter
+
 W = 1.0
-WX = W # trapping frequency
-WY = W
-WZ = W
-A = .30 + .40j # Coefficient for homogeneous solution
+WX = 1. # trapping frequency
+WY = 1.
+WZ = 7./476.
 
 # Establish grid points
 x = hx*cp.arange(NX) + xa
@@ -137,7 +147,8 @@ z = hz*cp.arange(NZ) + za
 
 # Gaussian initial
 sigma = 1.0
-psi_init = 1/cp.sqrt(2*cp.pi) * cp.einsum('i,j,k->ijk', cp.exp(-x**2/(2*sigma**2)), cp.exp(-y**2/(2*sigma**2)), cp.exp(-z**2/(2*sigma**2)))
+sigmaz = np.sqrt(1/WZ)
+psi_init = 1/cp.sqrt(2*cp.pi) * cp.einsum('i,j,k->ijk', cp.exp(-x**2/(2*sigma**2)), cp.exp(-y**2/(2*sigma**2)), cp.exp(-z**2/(2*sigmaz**2)))
 
 ## Plane Wave
 #mu = 2*cp.pi*cp.array([0/LX, 1/LY, -2/LZ])
@@ -160,7 +171,7 @@ print(f'Grid Points = {NX*NY*NZ}')
 norm_time = [getNorm(psiPlot[j, :]) for j in range(len(psiPlot))]
 print(f'Norm Ratio = {norm_time[-1]/norm_time[0] - 1}\n')
 
-print(f'Estimated Runtime = {(end-begin)/TIME_PTS * 32000 / 60} min')
+print(f'Estimated Runtime = {(end-begin)/TIME_PTS * 14000 / 60} min')
 
 #homExact = A*cp.exp(-1j*G*cp.abs(A)**2 * TIME)
 #print('Homogeneous Solution = ' + f'{homExact}')
@@ -171,11 +182,55 @@ print(f'Estimated Runtime = {(end-begin)/TIME_PTS * 32000 / 60} min')
 #plt.ylabel("Norm of Wave Function")
 #plt.xlabel('Time')
 
+y_np = hy*np.arange(NY) + ya
 z_np = hz*np.arange(NZ) + za
 xx,tt = np.meshgrid(z_np,np.arange(TIME_PTS+1)*dt)
-fig = plt.figure(2)   # Clear figure 2 window and bring forward
-ax = fig.gca(projection='3d')
-surf = ax.plot_surface(xx, tt, psiPlot, rstride=1, cstride=1, cmap=cm.jet,linewidth=0, antialiased=False)
-ax.set_xlabel('Position')
-ax.set_ylabel('Time')
-ax.set_zlabel('Amplitude)')
+if surf_plot_on:
+    fig = plt.figure(2)   # Clear figure 2 window and bring forward
+    ax = fig.gca(projection='3d')
+    surf = ax.plot_surface(xx, tt, psiPlot, rstride=1, cstride=1, cmap=cm.jet,linewidth=0, antialiased=False)
+    ax.set_xlabel('Position')
+    ax.set_ylabel('Time')
+    ax.set_zlabel('Amplitude)')
+        
+        
+# ----------- Animation -------------
+# This code is for generating an animation of psiPlot
+#
+# This code will save the animation to an mp4
+# First set up the figure, the axis, and the plot element we want to animate
+
+if animation_on:
+    y_min = 0
+    y_max = np.max(psiPlot)
+    
+    fig = plt.figure()
+    ax = plt.axes(xlim=(za, zb), ylim=(y_min, y_max))
+    ax.set_title('Animation')
+    ax.set_xlabel('z')
+    ax.set_ylabel(r'$|\psi|^2$')
+    line, = ax.plot([], [], lw=2)
+    
+    # initialization function: plot the background of each frame
+    def init():
+        line.set_data([], [])
+        return line,
+    
+    # animation function.  This is called sequentially
+    def animate(i):
+        y = psiPlot[i,:]
+        line.set_data(z_np, y)
+        return line,
+    
+    # call the animator.  blit=True means only re-draw the parts that have changed.
+    anim = animation.FuncAnimation(fig, animate, init_func=init,
+                                   frames=int(TIME_PTS/RED_COEFF), interval=60.0, blit=True)
+    
+    # save the animation as an mp4.  This requires ffmpeg or mencoder to be
+    # installed.  The extra_args ensure that the x264 codec is used, so that
+    # the video can be embedded in html5.  You may need to adjust this for
+    # your system: for more information, see
+    # http://matplotlib.sourceforge.net/api/animation_api.html
+    #
+    # This will save the animation to file animation.mp4 by default
+    anim.save(animation_filename, fps=100)
