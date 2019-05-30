@@ -19,6 +19,8 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import animation
 import timeit
 
+# ---------------- Real Time Propagation via Spectral Method
+
 def getNorm(waveFunction):
     """
     Finds norm for a given state of psi
