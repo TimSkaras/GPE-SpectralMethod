@@ -34,9 +34,9 @@ def stencil(solution):
     
     """
     
-    stencilArray = (solution[x_forward,:,:] - 2*solution + solution[x_backward,:,:])/HX**2
-    stencilArray += (solution[:,y_forward,:] - 2*solution + solution[:,y_backward,:])/HY**2
-    stencilArray += (solution[:,:,z_forward] - 2*solution + solution[:,:,z_backward])/HZ**2
+    stencilArray = (solution[x_forward,:,:] - 2*solution + solution[x_back,:,:])/hx**2
+    stencilArray += (solution[:,y_forward,:] - 2*solution + solution[:,y_back,:])/hy**2
+    stencilArray += (solution[:,:,z_forward] - 2*solution + solution[:,:,z_back])/hz**2
 
     return stencilArray
     
@@ -54,12 +54,18 @@ def imagTimeProp(solution, tol):
     
     res = 1.0
     iterations = 0
-    while res > tol or iterations > 500000:
+    while res > tol and iterations < max_iter :
         iterations += 1
         new_solution = solution + dt*(0.5*stencil(solution) - potential*solution - G * np.abs(solution)**2 * solution)
         res = np.sum(np.abs(new_solution - solution))
+        
+        if iterations % 20 == 0:
+            new_solution = normalize(new_solution)
+            
+        solution = np.copy(new_solution)
     
-    return solution
+    print(f'Tolerance = {res}')
+    return normalize(solution)
 
 
 # ---------------- System Parameters ------------------
@@ -88,8 +94,14 @@ zb = za + LZ
 hx = LX/NX
 hy = LY/NY
 hz = LZ/NZ
-dt = .01
+dt = .05
 G = 1070.
+
+#Trap Configuration
+W = 1.0
+WX = 1. # trapping frequency
+WY = 1.
+WZ = 7./476.
 
 # Establish grid points
 x = hx*np.arange(NX) + xa
@@ -109,4 +121,27 @@ z_idx = np.arange(NZ)
 z_forward = np.roll(z_idx, 1)
 z_back = np.roll(z_idx, -1)
 
+# ----------- Initial Conditions and Finding G.S. ------------------
 
+sigma = 1.0
+sigmaz = np.sqrt(1/WZ)
+psi_init = 1/np.sqrt(2*np.pi) * np.einsum('i,j,k->ijk', np.exp(-x**2/(2*sigma**2)), np.exp(-y**2/(2*sigma**2)), np.exp(-z**2/(2*sigmaz**2)))
+tol = 10**-2
+max_iter = 50000
+
+solution = imagTimeProp(psi_init, tol)
+
+
+# ----------------- Plotting Results --------------------------
+
+# Arrays needed for plotting
+y_np = hy*np.arange(NY) + ya
+z_np = hz*np.arange(NZ) + za
+zz,yy = np.meshgrid(z_np, y_np)
+
+fig = plt.figure(2)   # Clear figure 2 window and bring forward
+ax = fig.gca(projection='3d')
+surf = ax.plot_surface(zz, yy, np.sum(np.abs(solution)**2, axis=(0))*hx, rstride=1, cstride=1, cmap=cm.jet,linewidth=0, antialiased=False)
+ax.set_xlabel('Z-Axis')
+ax.set_ylabel('Y-Axis')
+ax.set_zlabel('Amplitude)')
