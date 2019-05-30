@@ -1,13 +1,15 @@
 """
-This code is tests out the time-splitting spectral method in python because it 
-is easier to develop code for the first time in python/Matlab
-
 This code solves the equation
 i du/dt = -1/2 d^2u/dx^2 + 1/2*w**2*x**2*u + g|u|^2 u
 
-this code is one dimensional and has periodic boundary conditions
+this code is three dimensional and has periodic boundary conditions
 
 The two end points for the solution a and b are at a=0 and b=L
+
+TODO:
+    1) Although the scattering length does change in time it might not properly
+    account for the fact that the time is not the same at different steps 
+    within the Time Splitting Spectral Method
 
 """
 
