@@ -153,6 +153,7 @@ psi_init = 1/cp.sqrt(2*cp.pi) * cp.einsum('i,j,k->ijk', cp.exp(-x**2/(2*sigma**2
 # Load Ground State from File
 psi_init = np.loadtxt('GroundStateSave/gs1.txt', dtype=float)
 psi_init = np.reshape(psi_init, (NX, NY, NZ))
+psi_init = cp.asarray(psi_init)
 
 begin = timeit.default_timer()
 psiPlot = realTimePropagation(psi_init)
