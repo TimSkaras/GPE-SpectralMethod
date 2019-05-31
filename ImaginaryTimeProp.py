@@ -148,7 +148,7 @@ if save_solution:
     # Convert to 2D array because it is hard to store 3D arrays
     solutionSaveFormat = np.reshape(solution, (NX*NY,NZ))
     filename = 'GroundStateSave/gs1.txt'
-    np.savetxt(filename, solution, fmt='%e')
+    np.savetxt(filename, solutionSaveFormat, fmt='%e')
     file = open('GroundStateSave/info.txt', 'a')
     file.write(f'{filename} NX {NX} NY {NY} NZ {NZ} LX {LX} LY {LY} LZ {LZ} WX {WX} WY {WY} WZ {WZ}')
     file.close()
