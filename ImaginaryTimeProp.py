@@ -7,21 +7,21 @@ from matplotlib import animation
 import numba
 from numba import jit
 
-test0 = np.array([[[1.2, 1.3, 3.1],
-                 [2.1, 2.2, 2.3]],
-                 [[1.12, 1.22, 1.32],
-                 [2.12, 2.22, 2.32]]])
-test = np.reshape(test0, (4,3))
-np.savetxt('test.txt', test, fmt='%e')
-b = np.loadtxt('test.txt', dtype=float)
-b = np.reshape(b, (2,2,3))
-
+def getEnergy(waveFunction):
+    """
+    Finds expectation value of Hamiltonian for given wave function
+    """
+    
+    energy = np.sum(-np.conj(waveFunction)*0.5*stencil(waveFunction)+ np.conj(waveFunction)*potential*waveFunction + G * np.abs(waveFunction)**4)*hx*hy*hz
+    
+    return energy
+    
 def getNorm(waveFunction):
     """
     Finds norm for a given state of psi
     """
 
-    return np.sqrt(np.sum(waveFunction*hz))
+    return np.sqrt(np.sum(waveFunction)*hx*hy*hz)
 
 def normalize(waveFunction):
     """
@@ -50,24 +50,22 @@ def imagTimeProp(solution, tol):
     
     """
     
-    # Setup for method
-    potential = np.einsum('i,j,k->ijk', np.exp(0.5*WX**2*(x - (xa+xb)/2.)**2), np.exp(0.5*WY**2*(y - (ya+yb)/2.)**2), 
-                              np.exp(0.5*WZ**2*(z-(za+zb)/2.)**2))
-    potential = np.log(potential) 
-    
     res = 1.0
     iterations = 0
+    energyPlot = np.array([getEnergy(normalize(solution))])
     while res > tol and iterations < max_iter :
         iterations += 1
         new_solution = solution + dt*(0.5*stencil(solution) - potential*solution - G * np.abs(solution)**2 * solution)
-        res = np.sum(np.abs(new_solution - solution))
         
-        if iterations % 20 == 0:
+        
+        if iterations % 10 == 0:
             new_solution = normalize(new_solution)
+            energyPlot = np.append(energyPlot, getEnergy(new_solution))
+            res = np.abs(energyPlot[-1] - energyPlot[-2])/energyPlot[-2]/dt
             
         solution = np.copy(new_solution)
         
-        if iterations % 500 == 0:
+        if iterations % 1000 == 0:
             print(f'Residue = {res}')
     
     print(f'Residue = {res}')
@@ -100,7 +98,7 @@ zb = za + LZ
 hx = LX/NX
 hy = LY/NY
 hz = LZ/NZ
-dt = .01
+dt = .02
 G = 1070.
 
 #Trap Configuration
@@ -127,16 +125,33 @@ z_idx = np.arange(NZ)
 z_forward = np.roll(z_idx, 1)
 z_back = np.roll(z_idx, -1)
 
+# Potential at each grid point
+potential = np.einsum('i,j,k->ijk', np.exp(0.5*WX**2*(x - (xa+xb)/2.)**2), np.exp(0.5*WY**2*(y - (ya+yb)/2.)**2), 
+                          np.exp(0.5*WZ**2*(z-(za+zb)/2.)**2))
+potential = np.log(potential) 
+
 # ----------- Initial Conditions and Finding G.S. ------------------
 
 sigma = 1.0
 sigmaz = np.sqrt(1/WZ)
 psi_init = 1/np.sqrt(2*np.pi) * np.einsum('i,j,k->ijk', np.exp(-x**2/(2*sigma**2)), np.exp(-y**2/(2*sigma**2)), np.exp(-z**2/(2*sigmaz**2))/sigmaz)
-tol = 10**-3
-max_iter = 5000
+tol = 10**-6
+max_iter = 50000
+save_solution = 1
 
 solution = imagTimeProp(psi_init, tol)
 
+
+# ------------------------- Save Solution ---------------------------
+
+if save_solution:
+    # Convert to 2D array because it is hard to store 3D arrays
+    solutionSaveFormat = np.reshape(solution, (NX*NY,NZ))
+    filename = 'GroundStateSave/gs1.txt'
+    np.savetxt(filename, solution, fmt='%e')
+    file = open('GroundStateSave/info.txt', 'a')
+    file.write(f'{filename} NX {NX} NY {NY} NZ {NZ} LX {LX} LY {LY} LZ {LZ} WX {WX} WY {WY} WZ {WZ}')
+    file.close()
 
 # ----------------- Plotting Results --------------------------
 

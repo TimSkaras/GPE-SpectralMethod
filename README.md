@@ -13,3 +13,9 @@ For the code to work, you will also need to add the line
 import chainer
 
 to the top of the file so that colab will let you import cupy. Other than that, everything should be the same.
+
+GroundStateSave Directory
+
+I am using this directory to save the ground state particular harmonic trap configurations. In the file info.txt, I store information about each ground state to give details about the trapping potential and the dimensions of the region in space over which it spans.
+
+In each file, I can only store the value of the wave function at each grid point and not information about the location at each grid point, so to get around this I am storing that information in info.txt

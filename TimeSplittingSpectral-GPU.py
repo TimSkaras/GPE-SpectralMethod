@@ -127,7 +127,7 @@ RED_COEFF = 1
 
 dt = TIME/TIME_PTS
 OMEGA = 2.0
-EPS = 0.2
+EPS = 0.0
 MOD_TIME = 5*np.pi
 G = 1070.
 GFunc = lambda t: (G* (1.0 + EPS*np.sin(OMEGA*t)) if t < MOD_TIME else G) # interaction strength parameter
@@ -144,24 +144,15 @@ z = hz*cp.arange(NZ) + za
 
 # ------------- Initial Conditions -------------
 
-## Soliton solution
-
-## Homogeneous solution
-#psi_init = A*cp.ones((NX, NY, NZ))
-
+# Example Initial Condition
 # Gaussian initial
 sigma = 1.0
 sigmaz = np.sqrt(1/WZ)
 psi_init = 1/cp.sqrt(2*cp.pi) * cp.einsum('i,j,k->ijk', cp.exp(-x**2/(2*sigma**2)), cp.exp(-y**2/(2*sigma**2)), cp.exp(-z**2/(2*sigmaz**2)))
 
-## Plane Wave
-#mu = 2*cp.pi*cp.array([0/LX, 1/LY, -2/LZ])
-#psi_init = cp.ones((NX, NY, NZ), dtype=cp.complex_)
-#for i in cp.arange(NX):
-#    for j in cp.arange(NY):
-#        for k in cp.arange(NZ):
-#            psi_init[i,j,k] = cp.exp(1j*(mu[0]*x[i] + mu[1]*y[j] + mu[2]*z[k]))
-#            
+# Load Ground State from File
+psi_init = np.loadtxt('GroundStateSave/gs1.txt', dtype=float)
+psi_init = np.reshape(psi_init, (NX, NY, NZ))
 
 begin = timeit.default_timer()
 psiPlot = realTimePropagation(psi_init)
