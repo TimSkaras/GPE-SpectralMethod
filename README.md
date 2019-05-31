@@ -1,8 +1,8 @@
 # GPE-SpectralMethod
 
-## Use
-
 Implementing a spectral method in python for solving the Gross-Pitaevskii Equation in three spatial dimensions. Includes CPU and GPU implementation
+
+## Use
 
 The GPU implementation is much faster than the CPU implementation. Depending on the size of the problem, the GPU code can be up to an order of magnitude faster. To use the GPU code, you will need to have a system that has a GPU with CuPy available.
 
