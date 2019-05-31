@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import animation
+import numba
+from numba import jit
 
 test0 = np.array([[[1.2, 1.3, 3.1],
                  [2.1, 2.2, 2.3]],
@@ -27,7 +29,8 @@ def normalize(waveFunction):
     """
     
     return waveFunction/getNorm(waveFunction)
-
+    
+@jit(nopython=True)
 def stencil(solution):
     """
     Finds Laplacian of solution assuming periodic boundary conditions
@@ -63,8 +66,11 @@ def imagTimeProp(solution, tol):
             new_solution = normalize(new_solution)
             
         solution = np.copy(new_solution)
+        
+        if iterations % 500 == 0:
+            print(f'Residue = {res}')
     
-    print(f'Tolerance = {res}')
+    print(f'Residue = {res}')
     return normalize(solution)
 
 
@@ -94,7 +100,7 @@ zb = za + LZ
 hx = LX/NX
 hy = LY/NY
 hz = LZ/NZ
-dt = .05
+dt = .01
 G = 1070.
 
 #Trap Configuration
@@ -125,9 +131,9 @@ z_back = np.roll(z_idx, -1)
 
 sigma = 1.0
 sigmaz = np.sqrt(1/WZ)
-psi_init = 1/np.sqrt(2*np.pi) * np.einsum('i,j,k->ijk', np.exp(-x**2/(2*sigma**2)), np.exp(-y**2/(2*sigma**2)), np.exp(-z**2/(2*sigmaz**2)))
-tol = 10**-2
-max_iter = 50000
+psi_init = 1/np.sqrt(2*np.pi) * np.einsum('i,j,k->ijk', np.exp(-x**2/(2*sigma**2)), np.exp(-y**2/(2*sigma**2)), np.exp(-z**2/(2*sigmaz**2))/sigmaz)
+tol = 10**-3
+max_iter = 5000
 
 solution = imagTimeProp(psi_init, tol)
 
