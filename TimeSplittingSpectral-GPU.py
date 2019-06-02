@@ -10,6 +10,7 @@ TODO:
     1) Although the scattering length does change in time it might not properly
     account for the fact that the time is not the same at different steps 
     within the Time Splitting Spectral Method
+    2) Display simulated time on each frame of animation
 
 """
 
@@ -25,7 +26,7 @@ import timeit
 
 def getNorm(waveFunction):
     """
-    Finds norm for a given state of psi
+    Finds norm for a given state of psi squared
     """
 
     return np.sqrt(np.sum(waveFunction*hz))
@@ -76,7 +77,7 @@ def realTimePropagation(solution):
         solution = cp.fft.ifftn(fourierCoeffs)
         
         # Step Three -- potential and interaction term again
-        expTerm = cp.exp(-1j* (potential + GFunc(p*dt)*cp.abs(solution)**2)*dt/2.0)
+        expTerm = cp.exp(-1j* (potential + GFunc((p + 0.5)*dt)*cp.abs(solution)**2)*dt/2.0)
         solution = expTerm*solution
         
         # Save Solution for plotting
@@ -93,7 +94,7 @@ surf_plot_on = 0
 
 # Animation Input Parameters
 animation_on = 1
-animation_filename = 'animation.mp4' # filename for animation output
+animation_filename = 'Animations/animation.mp4' # filename for animation output
 
 # Spatial Points
 N = 32
@@ -107,7 +108,7 @@ LX = L
 LY = L
 LZ = 375.0
 
-TIME = 20.0
+TIME = 2.0
 
 # Start and end points in space
 xa = -LX/2
@@ -122,12 +123,12 @@ hx = LX/NX
 hy = LY/NY
 hz = LZ/NZ
 
-TIME_PTS = 1400
+TIME_PTS = 140
 RED_COEFF = 1
 
 dt = TIME/TIME_PTS
 OMEGA = 2.0
-EPS = 0.0
+EPS = 0.2
 MOD_TIME = 5*np.pi
 G = 1070.
 GFunc = lambda t: (G* (1.0 + EPS*np.sin(OMEGA*t)) if t < MOD_TIME else G) # interaction strength parameter
@@ -142,6 +143,9 @@ x = hx*cp.arange(NX) + xa
 y = hy*cp.arange(NY) + ya
 z = hz*cp.arange(NZ) + za
 
+y_np = hy*np.arange(NY) + ya
+z_np = hz*np.arange(NZ) + za
+
 # ------------- Initial Conditions -------------
 
 # Example Initial Condition
@@ -153,13 +157,17 @@ psi_init = 1/cp.sqrt(2*cp.pi) * cp.einsum('i,j,k->ijk', cp.exp(-x**2/(2*sigma**2
 # Load Ground State from File
 psi_init = np.loadtxt('GroundStateSave/gs1.txt', dtype=float)
 psi_init = np.reshape(psi_init, (NX, NY, NZ))
-psi_init = cp.asarray(psi_init)
 
+## Plot the z-axis of the ground state
+#fig, ax = plt.subplots()
+#ax.plot(z_np, np.sum(np.abs(psi_init)**2, axis=(0,1)) *hx*hy*hz)
+
+# Move initial condition to GPU and run simulation
+psi_init = cp.asarray(psi_init)
 begin = timeit.default_timer()
 psiPlot = realTimePropagation(psi_init)
 end = timeit.default_timer()
         
-
 print(f'Time Elapsed = {end-begin}')
 print(f'Grid Points = {NX*NY*NZ}')
 
@@ -178,8 +186,6 @@ print(f'Estimated Runtime = {(end-begin)/TIME_PTS * 14000 / 60} min')
 #plt.ylabel("Norm of Wave Function")
 #plt.xlabel('Time')
 
-y_np = hy*np.arange(NY) + ya
-z_np = hz*np.arange(NZ) + za
 xx,tt = np.meshgrid(z_np,np.arange(TIME_PTS+1)*dt)
 if surf_plot_on:
     fig = plt.figure(2)   # Clear figure 2 window and bring forward
@@ -200,9 +206,10 @@ if animation_on:
     y_min = 0
     y_max = np.max(psiPlot)
     
-    fig = plt.figure()
+    fig = plt.figure(num=3, figsize=(8, 6), dpi=80)
+    fig.set_size_inches(8, 6, forward=True)
     ax = plt.axes(xlim=(za, zb), ylim=(y_min, y_max))
-    ax.set_title('Animation')
+    ax.set_title('Time Evolution of Linear Z-Density')
     ax.set_xlabel('z')
     ax.set_ylabel(r'$|\psi|^2$')
     line, = ax.plot([], [], lw=2)
@@ -229,4 +236,4 @@ if animation_on:
     # http://matplotlib.sourceforge.net/api/animation_api.html
     #
     # This will save the animation to file animation.mp4 by default
-    anim.save(animation_filename, fps=100)
+    anim.save(animation_filename, fps=10, dpi=200)

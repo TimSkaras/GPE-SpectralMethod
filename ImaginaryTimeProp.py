@@ -21,7 +21,7 @@ def getNorm(waveFunction):
     Finds norm for a given state of psi
     """
 
-    return np.sqrt(np.sum(waveFunction)*hx*hy*hz)
+    return np.sqrt(np.sum(np.abs(waveFunction)**2)*hx*hy*hz)
 
 def normalize(waveFunction):
     """
