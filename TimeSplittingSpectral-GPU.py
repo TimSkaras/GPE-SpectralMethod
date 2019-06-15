@@ -93,7 +93,7 @@ def realTimePropagation(solution):
 surf_plot_on = 0
 
 # Animation Input Parameters
-animation_on = 1
+animation_on = 0
 animation_filename = 'Animations/animation.mp4' # filename for animation output
 
 # Spatial Points
@@ -146,7 +146,7 @@ z = hz*cp.arange(NZ) + za
 y_np = hy*np.arange(NY) + ya
 z_np = hz*np.arange(NZ) + za
 
-# ------------- Initial Conditions -------------
+# ---------------- Initial Conditions ----------------
 
 # Example Initial Condition
 # Gaussian initial
@@ -162,6 +162,8 @@ psi_init = np.reshape(psi_init, (NX, NY, NZ))
 #fig, ax = plt.subplots()
 #ax.plot(z_np, np.sum(np.abs(psi_init)**2, axis=(0,1)) *hx*hy*hz)
 
+# ------------------ Solver ----------------------
+
 # Move initial condition to GPU and run simulation
 psi_init = cp.asarray(psi_init)
 begin = timeit.default_timer()
@@ -176,6 +178,8 @@ norm_time = [getNorm(psiPlot[j, :]) for j in range(len(psiPlot))]
 print(f'Norm Ratio = {norm_time[-1]/norm_time[0] - 1}\n')
 
 print(f'Estimated Runtime = {(end-begin)/TIME_PTS * 14000 / 60} min')
+
+# ----------------- Display Results --------------
 
 #homExact = A*cp.exp(-1j*G*cp.abs(A)**2 * TIME)
 #print('Homogeneous Solution = ' + f'{homExact}')
@@ -237,3 +241,17 @@ if animation_on:
     #
     # This will save the animation to file animation.mp4 by default
     anim.save(animation_filename, fps=150, dpi=150)
+
+
+# -------------- Mode Analysis -------------------
+    
+k = 2*np.pi*NZ/LZ * np.arange(0, NZ//2)/NZ
+kk,tt = np.meshgrid(k,np.arange(0,TIME_PTS+1, 100)*dt)
+kspace = np.abs(np.fft.fft(psiPlot))[::100, 0:NZ//2]
+
+fig = plt.figure(4)   # Clear figure 2 window and bring forward
+ax = fig.gca(projection='3d')
+surf = ax.plot_surface(kk, tt, kspace, rstride=1, cstride=1, cmap=cm.jet,linewidth=0, antialiased=False)
+ax.set_xlabel('Wavenumber')
+ax.set_ylabel('Time')
+ax.set_zlabel('Amplitude)')

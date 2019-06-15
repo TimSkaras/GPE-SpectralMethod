@@ -10,7 +10,7 @@ If you don't have a GPU or don't have that installed, the easiest way to use the
 
 After opening a Jupyter notebook in colab, you will need to enable the GPU. Go to Runtime > Change Runtime Type and set Hardware Accelerator to GPU to make sure you can use the GPU.
 
-For the code to work, you will also need to add the line
+For the code to work, you might also need to add the line
 
 import chainer
 
