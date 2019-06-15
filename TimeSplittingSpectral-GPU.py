@@ -24,12 +24,12 @@ import timeit
 
 # ---------------- Real Time Propagation via Spectral Method
 
-def getNorm(waveFunction):
+def getNorm(psiSquared):
     """
     Finds norm for a given state of psi squared
     """
 
-    return np.sqrt(np.sum(waveFunction*hz))
+    return np.sqrt(np.sum(psiSquared*hz))
 
 def reduceIntegrateCUDA(waveFunction):
     """
@@ -108,7 +108,7 @@ LX = L
 LY = L
 LZ = 375.0
 
-TIME = 2.0
+TIME = 250.0
 
 # Start and end points in space
 xa = -LX/2
@@ -123,7 +123,7 @@ hx = LX/NX
 hy = LY/NY
 hz = LZ/NZ
 
-TIME_PTS = 140
+TIME_PTS = 14000
 RED_COEFF = 1
 
 dt = TIME/TIME_PTS
@@ -236,4 +236,4 @@ if animation_on:
     # http://matplotlib.sourceforge.net/api/animation_api.html
     #
     # This will save the animation to file animation.mp4 by default
-    anim.save(animation_filename, fps=10, dpi=200)
+    anim.save(animation_filename, fps=150, dpi=150)

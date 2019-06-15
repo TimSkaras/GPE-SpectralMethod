@@ -150,7 +150,7 @@ if save_solution:
     filename = 'GroundStateSave/gs1.txt'
     np.savetxt(filename, solutionSaveFormat, fmt='%e')
     file = open('GroundStateSave/info.txt', 'a')
-    file.write(f'{filename} NX {NX} NY {NY} NZ {NZ} LX {LX} LY {LY} LZ {LZ} WX {WX} WY {WY} WZ {WZ}')
+    file.write(f'{filename} NX {NX} NY {NY} NZ {NZ} LX {LX} LY {LY} LZ {LZ} WX {WX} WY {WY} WZ {WZ}\n')
     file.close()
 
 # ----------------- Plotting Results --------------------------
