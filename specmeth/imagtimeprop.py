@@ -56,8 +56,7 @@ def imagTimeProp(solution, tol):
     while res > tol and iterations < max_iter :
         iterations += 1
         new_solution = solution + dt*(0.5*stencil(solution) - potential*solution - G * np.abs(solution)**2 * solution)
-        
-        
+                
         if iterations % 10 == 0:
             new_solution = normalize(new_solution)
             energyPlot = np.append(energyPlot, getEnergy(new_solution))

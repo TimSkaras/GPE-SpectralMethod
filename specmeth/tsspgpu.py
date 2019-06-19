@@ -38,14 +38,6 @@ def reduceIntegrateCUDA(waveFunction):
     """
     
     return cp.sum(cp.abs(waveFunction)**2, axis=(0,1))*hx*hy
-
-def reduceIntegrate(waveFunction):
-    """
-    This function takes a three dimensional array of values and redcues it to a
-    single dimensional array by integrating over the x and y dimensions
-    """
-    
-    return np.sum(np.abs(waveFunction)**2, axis=(0,1))*hx*hy
     
 def realTimePropagation(solution):
     """
