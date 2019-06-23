@@ -12,7 +12,7 @@ class Simulation:
     
     # --------------------- Set up methods/Auxiliary -------------------------
     
-    def __init__(self, gridDim, regionDim, startEnd, trapVars, gVars):
+    def __init__(self, gridDim, regionDim, startEnd, trapVars, gVars, GPU):
         """
         This method initializes an instance of the Simulation object
         
@@ -49,6 +49,9 @@ class Simulation:
             EPS -- oscillation amplitude of G(t)
             MOD_TIME -- total time for which G(t) should oscillate
             G0 -- magnitude of scattering length
+            
+        GPU -- boolean value - set to True if you plan to do computation on GPU
+                otherwise set to False and computations will be done on CPU
         """
         
         [self.NX, self.NY, self.NZ, self.TIME_PTS] = gridDim
@@ -62,13 +65,33 @@ class Simulation:
         self.hz = self.LZ/self.NZ
         self.dt = self.TIME/self.TIME_PTS
         
+        if GPU:
+            xp = cp
+        else:
+            xp = np
+            
+        potential = xp.einsum('i,j,k->ijk', xp.exp(0.5*self.WX**2*(x - (self.XA+self.XB)/2.)**2), xp.exp(0.5*self.WY**2*(y - (self.YA+self.YB)/2.)**2), 
+                              xp.exp(0.5*self.WZ**2*(z-(self.ZA+self.ZB)/2.)**2))
+        self.potential = xp.log(potential) 
+        
+        # Arrays needed to find laplacian
+        self.x_idx = xp.arange(self.NX)
+        self.x_forward = xp.roll(x_idx, 1)
+        self.x_back = xp.roll(self.x_idx, -1)
+        
+        self.y_idx = xp.arange(self.NY)
+        self.y_forward = xp.roll(self.y_idx, 1)
+        self.y_back = xp.roll(self.y_idx, -1)
+        
+        self.z_idx = xp.arange(self.NZ)
+        self.z_forward = xp.roll(self.z_idx, 1)
+        self.z_back = xp.roll(self.z_idx, -1)
+        
     def scatLen(self, t):
         """
         Returns time-dependent scattering length at a given time t
         """
         return  (self.G0* (1.0 + self.EPS*np.sin(self.OMEGA*t)) if t < self.MOD_TIME else self.G0)
-    
-    # --------------------- Real Time Propagation -------------------------
     
     def getNorm(self, psiSquared):
         """
@@ -76,6 +99,28 @@ class Simulation:
         """
         xp = cp.get_array_module(psiSquared)
         return xp.sqrt(xp.sum(psiSquared*self.hz))
+    
+    def getEnergy(self, waveFunction):
+        """
+        Finds expectation value of Hamiltonian for given wave function
+        """
+        xp = cp.get_array_module(waveFunction)
+        
+        # Potential at each grid point
+        energy = xp.sum(-xp.conj(waveFunction)*0.5*stencil(waveFunction) 
+        + xp.conj(waveFunction)*self.potential*waveFunction 
+        + self.G0 * xp.abs(waveFunction)**4)*self.hx*self.hy*self.hz
+    
+        return energy
+    
+    def loadSolution(self, path):
+        """
+        Retrieves an initial condition or ground state that has been saved from
+        the saveSolution method        
+        """
+        pass
+    
+    # --------------------- Real Time Propagation -------------------------
     
     def reduceIntegrate(self, waveFunction):
         """
@@ -107,16 +152,12 @@ class Simulation:
         muExpTerm = xp.einsum('i,j,k->ijk', xp.exp(-1j*self.dt*mux**2/2.), xp.exp(-1j*self.dt*muy**2/2.), xp.exp(-1j*self.dt*muz**2/2.))
         muExpTerm = xp.fft.ifftshift(muExpTerm)
             
-        potential = xp.einsum('i,j,k->ijk', xp.exp(0.5*WX**2*(x - (self.XA+self.XB)/2.)**2), xp.exp(0.5*WY**2*(y - (self.YA+self.YB)/2.)**2), 
-                                  xp.exp(0.5*WZ**2*(z-(self.ZA+self.ZB)/2.)**2))
-        potential = xp.log(potential) 
         
-        for p in range(TIME_PTS):
+        for p in range(self.TIME_PTS):
             
             # Step One -- potential and interaction term
-            expTerm = xp.exp(-1j* (potential + self.scatLen(p*dt)*xp.abs(solution)**2)*dt/2.0)
+            expTerm = xp.exp(-1j* (self.potential + self.scatLen(p*dt)*xp.abs(solution)**2)*self.dt/2.0)
             solution = expTerm*solution
-                        
                         
             # Step Two -- kinetic term
             fourierCoeffs = xp.fft.fftn(solution)
@@ -124,11 +165,10 @@ class Simulation:
             solution = xp.fft.ifftn(fourierCoeffs)
             
             # Step Three -- potential and interaction term again
-            expTerm = xp.exp(-1j* (potential + self.scatLen((p + 0.5)*dt)*xp.abs(solution)**2)*dt/2.0)
+            expTerm = xp.exp(-1j* (self.potential + self.scatLen((p + 0.5)*self.dt)*xp.abs(solution)**2)*self.dt/2.0)
             solution = expTerm*solution
             
             # Save Solution for plotting
-            #np_solution = cp.asnumpy(solution)
             psiPlot = np.vstack((psiPlot, cp.asnumpy(self.reduceIntegrate(solution)))) 
             
         return psiPlot
@@ -136,19 +176,12 @@ class Simulation:
     
     # ------------------- Imaginary Time Propagation -------------------------
     
-    def getEnergy(self, waveFunction):
-        """
-        Finds expectation value of Hamiltonian for given wave function
-        """
-        
-        pass
-    
     def normalize(self, waveFunction):
         """
         Takes unnormalized wave function and normalizes it to one
         """
-        
-        pass
+        xp = cp.get_array_module(waveFunction)
+        return waveFunction/self.getNorm(xp.abs(waveFunction)**2)
     
     @jit(nopython=True)
     def stencil(self, solution):
@@ -157,7 +190,11 @@ class Simulation:
         
         """
         
-        pass
+        stencilArray = (solution[self.x_forward,:,:] - 2*solution + solution[self.x_back,:,:])/self.hx**2
+        stencilArray += (solution[:,self.y_forward,:] - 2*solution + solution[:,self.y_back,:])/self.hy**2
+        stencilArray += (solution[:,:,self.z_forward] - 2*solution + solution[:,:,self.z_back])/self.hz**2
+    
+        return stencilArray
     
     def imagTimeProp(self, solution, tol):
         """
@@ -165,14 +202,41 @@ class Simulation:
         Uses a simple forward Euler method to find ground state to within desired tolerance
         
         """
-        pass
+        xp = cp.get_array_module(solution)
+        res = 1.0
+        iterations = 0
+        energyPlot = np.array([getEnergy(normalize(solution))])
+        max_iter = 50000
+
+        while res > tol and iterations < max_iter :
+            iterations += 1
+            new_solution = solution + self.dt*(0.5*self.stencil(solution) - self.potential*solution - self.G0 * np.abs(solution)**2 * solution)
+                    
+            if iterations % 10 == 0:
+                new_solution = self.normalize(new_solution)
+                energyPlot = np.append(energyPlot, self.getEnergy(new_solution))
+                res = np.abs(energyPlot[-1] - energyPlot[-2])/energyPlot[-2]/dt
+                
+            solution = xp.copy(new_solution)
+            
+            if iterations % 1000 == 0:
+                print(f'Residue = {res}')
+        
+        print(f'Residue = {res}')
+        return self.normalize(solution)
     
-    def saveSolution(self, savePath)
+    def saveSolution(self, solution, savePath)
         """
         Save the output groundstate from imaginary time propagation method
         
         """
-        pass
+        xp = cp.get_array_module(solution)
+        # Convert to 2D array because it is hard to store 3D arrays
+        solutionSaveFormat = np.reshape(solution, (self.NX*self.NY,self.NZ))
+        np.savetxt(savePath, solutionSaveFormat, fmt='%e')
+        file = open(savePath, 'a')
+        file.write(f'{savePath} NX {NX} NY {NY} NZ {NZ} LX {LX} LY {LY} LZ {LZ} WX {WX} WY {WY} WZ {WZ}\n')
+        file.close()
         
     
     # -------------- Plotting, Animation, & Visualization --------------------
@@ -182,11 +246,16 @@ class Simulation:
         Plots the linear z-density of the solution that resulted from realTimeProp
         
         INTPUTS:
-            psiPlot -- 2D array of the integrated z density from realTimeProp
+            psiPlot -- 2D numpy array of the integrated z density from realTimeProp
         
         """
         
-        pass
+        fig = plt.figure(2)   # Clear figure 2 window and bring forward
+        ax = fig.gca(projection='3d')
+        surf = ax.plot_surface(xx, tt, psiPlot, rstride=1, cstride=1, cmap=cm.jet,linewidth=0, antialiased=False)
+        ax.set_xlabel('Position')
+        ax.set_ylabel('Time')
+        ax.set_zlabel('Amplitude')
     
     def animateSol(self, psiPlot, savePath=''):
         """
@@ -197,7 +266,40 @@ class Simulation:
         If you don't want to save it, don't pass in the savePath variable
         """
         
-        pass
+        y_min = 0
+        y_max = np.max(psiPlot)
+        
+        fig = plt.figure(num=3, figsize=(8, 6), dpi=80)
+        fig.set_size_inches(8, 6, forward=True)
+        ax = plt.axes(xlim=(za, zb), ylim=(y_min, y_max))
+        ax.set_title('Time Evolution of Linear Z-Density')
+        ax.set_xlabel('z')
+        ax.set_ylabel(r'$|\psi|^2$')
+        line, = ax.plot([], [], lw=2)
+        
+        # initialization function: plot the background of each frame
+        def init():
+            line.set_data([], [])
+            return line,
+        
+        # animation function.  This is called sequentially
+        def animate(i):
+            y = psiPlot[i,:]
+            line.set_data(z_np, y)
+            return line,
+        
+        # call the animator.  blit=True means only re-draw the parts that have changed.
+        anim = animation.FuncAnimation(fig, animate, init_func=init,
+                                       frames=int(TIME_PTS/RED_COEFF), interval=60.0, blit=True)
+        
+        # save the animation as an mp4.  This requires ffmpeg or mencoder to be
+        # installed.  The extra_args ensure that the x264 codec is used, so that
+        # the video can be embedded in html5.  You may need to adjust this for
+        # your system: for more information, see
+        # http://matplotlib.sourceforge.net/api/animation_api.html
+        #
+        # This will save the animation to file animation.mp4 by default
+        anim.save(animation_filename, fps=150, dpi=150)
     
     
     
