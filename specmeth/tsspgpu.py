@@ -1,3 +1,4 @@
+
 """
 This code solves the equation
 i du/dt = -1/2 d^2u/dx^2 + 1/2*w**2*x**2*u + g|u|^2 u

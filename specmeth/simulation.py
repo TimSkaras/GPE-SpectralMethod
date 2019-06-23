@@ -74,22 +74,64 @@ class Simulation:
         """
         Finds norm for a given state of psi squared
         """
-        pass
+        xp = cp.get_array_module(psiSquared)
+        return xp.sqrt(xp.sum(psiSquared*self.hz))
     
-    def reduceIntegrateCUDA(self, waveFunction):
+    def reduceIntegrate(self, waveFunction):
         """
         This function takes a three dimensional array of values and redcues it to a
         single dimensional array by integrating over the x and y dimensions
         """
-        
-        pass
+        xp = cp.get_array_module(psiSquared)        
+        return xp.sum(xp.abs(waveFunction)**2, axis=(0,1))*self.hx*self.hy
     
     def realTimeProp(self, solution):
         """
         This function numerically solves the GPE in real time using the spectral method
         
+        RETURNS:
+            psiPlot -- numpy array with linear z-density as func of time
+        
         """
-        pass
+        xp = cp.get_array_module(solution)
+        
+        # Establish grid points
+        x = self.hx*xp.arange(self.NX) + self.XA
+        y = self.hy*xp.arange(self.NY) + self.YA
+        z = self.hz*xp.arange(self.NZ) + self.ZA
+        
+        psiPlot = np.array([cp.asnumpy(reduceIntegrate(solution))]) # Index Convention: psiPlot[time idx][space idx]
+        mux = 2*xp.pi/self.LX * xp.arange(-self.NX/2, self.NX/2)
+        muy = 2*xp.pi/self.LY * xp.arange(-self.NY/2, self.NY/2)
+        muz = 2*xp.pi/self.LZ * xp.arange(-self.NZ/2, self.NZ/2)
+        muExpTerm = xp.einsum('i,j,k->ijk', xp.exp(-1j*self.dt*mux**2/2.), xp.exp(-1j*self.dt*muy**2/2.), xp.exp(-1j*self.dt*muz**2/2.))
+        muExpTerm = xp.fft.ifftshift(muExpTerm)
+            
+        potential = xp.einsum('i,j,k->ijk', xp.exp(0.5*WX**2*(x - (self.XA+self.XB)/2.)**2), xp.exp(0.5*WY**2*(y - (self.YA+self.YB)/2.)**2), 
+                                  xp.exp(0.5*WZ**2*(z-(self.ZA+self.ZB)/2.)**2))
+        potential = xp.log(potential) 
+        
+        for p in range(TIME_PTS):
+            
+            # Step One -- potential and interaction term
+            expTerm = xp.exp(-1j* (potential + self.scatLen(p*dt)*xp.abs(solution)**2)*dt/2.0)
+            solution = expTerm*solution
+                        
+                        
+            # Step Two -- kinetic term
+            fourierCoeffs = xp.fft.fftn(solution)
+            fourierCoeffs = fourierCoeffs*muExpTerm
+            solution = xp.fft.ifftn(fourierCoeffs)
+            
+            # Step Three -- potential and interaction term again
+            expTerm = xp.exp(-1j* (potential + self.scatLen((p + 0.5)*dt)*xp.abs(solution)**2)*dt/2.0)
+            solution = expTerm*solution
+            
+            # Save Solution for plotting
+            #np_solution = cp.asnumpy(solution)
+            psiPlot = np.vstack((psiPlot, cp.asnumpy(self.reduceIntegrate(solution)))) 
+            
+        return psiPlot
     
     
     # ------------------- Imaginary Time Propagation -------------------------
