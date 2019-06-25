@@ -8,6 +8,16 @@ import timeit
 import numba
 from numba import jit
 
+
+"""
+TODO:
+    1) Add assert statements to ensure that the input arguments for methods
+    are on the correct device (e.g., are on gpu if GPU == True and on CPU
+    otherwise)
+    
+    2) Reduction coefficient
+"""
+
 class Simulation:
     
     # --------------------- Set up methods/Auxiliary -------------------------
@@ -70,22 +80,28 @@ class Simulation:
         else:
             xp = np
             
-        potential = xp.einsum('i,j,k->ijk', xp.exp(0.5*self.WX**2*(x - (self.XA+self.XB)/2.)**2), xp.exp(0.5*self.WY**2*(y - (self.YA+self.YB)/2.)**2), 
-                              xp.exp(0.5*self.WZ**2*(z-(self.ZA+self.ZB)/2.)**2))
+        # Establish grid points
+        self.x = self.hx*xp.arange(self.NX) + self.XA
+        self.y = self.hy*xp.arange(self.NY) + self.YA
+        self.z = self.hz*xp.arange(self.NZ) + self.ZA
+            
+        potential = xp.einsum('i,j,k->ijk', xp.exp(0.5*self.WX**2*(self.x - (self.XA+self.XB)/2.)**2), 
+                              xp.exp(0.5*self.WY**2*(self.y - (self.YA+self.YB)/2.)**2), 
+                              xp.exp(0.5*self.WZ**2*(self.z - (self.ZA+self.ZB)/2.)**2))
         self.potential = xp.log(potential) 
         
         # Arrays needed to find laplacian
-        self.x_idx = xp.arange(self.NX)
+        x_idx = xp.arange(self.NX)
         self.x_forward = xp.roll(x_idx, 1)
-        self.x_back = xp.roll(self.x_idx, -1)
+        self.x_back = xp.roll(x_idx, -1)
         
-        self.y_idx = xp.arange(self.NY)
-        self.y_forward = xp.roll(self.y_idx, 1)
-        self.y_back = xp.roll(self.y_idx, -1)
+        y_idx = xp.arange(self.NY)
+        self.y_forward = xp.roll(y_idx, 1)
+        self.y_back = xp.roll(y_idx, -1)
         
-        self.z_idx = xp.arange(self.NZ)
-        self.z_forward = xp.roll(self.z_idx, 1)
-        self.z_back = xp.roll(self.z_idx, -1)
+        z_idx = xp.arange(self.NZ)
+        self.z_forward = xp.roll(z_idx, 1)
+        self.z_back = xp.roll(z_idx, -1)
         
     def scatLen(self, t):
         """
@@ -127,7 +143,7 @@ class Simulation:
         This function takes a three dimensional array of values and redcues it to a
         single dimensional array by integrating over the x and y dimensions
         """
-        xp = cp.get_array_module(psiSquared)        
+        xp = cp.get_array_module(waveFunction)        
         return xp.sum(xp.abs(waveFunction)**2, axis=(0,1))*self.hx*self.hy
     
     def realTimeProp(self, solution):
@@ -140,12 +156,7 @@ class Simulation:
         """
         xp = cp.get_array_module(solution)
         
-        # Establish grid points
-        x = self.hx*xp.arange(self.NX) + self.XA
-        y = self.hy*xp.arange(self.NY) + self.YA
-        z = self.hz*xp.arange(self.NZ) + self.ZA
-        
-        psiPlot = np.array([cp.asnumpy(reduceIntegrate(solution))]) # Index Convention: psiPlot[time idx][space idx]
+        psiPlot = np.array([cp.asnumpy(self.reduceIntegrate(solution))]) # Index Convention: psiPlot[time idx][space idx]
         mux = 2*xp.pi/self.LX * xp.arange(-self.NX/2, self.NX/2)
         muy = 2*xp.pi/self.LY * xp.arange(-self.NY/2, self.NY/2)
         muz = 2*xp.pi/self.LZ * xp.arange(-self.NZ/2, self.NZ/2)
@@ -156,7 +167,7 @@ class Simulation:
         for p in range(self.TIME_PTS):
             
             # Step One -- potential and interaction term
-            expTerm = xp.exp(-1j* (self.potential + self.scatLen(p*dt)*xp.abs(solution)**2)*self.dt/2.0)
+            expTerm = xp.exp(-1j* (self.potential + self.scatLen(p*self.dt)*xp.abs(solution)**2)*self.dt/2.0)
             solution = expTerm*solution
                         
             # Step Two -- kinetic term
@@ -225,7 +236,7 @@ class Simulation:
         print(f'Residue = {res}')
         return self.normalize(solution)
     
-    def saveSolution(self, solution, savePath)
+    def saveSolution(self, solution, savePath):
         """
         Save the output groundstate from imaginary time propagation method
         
@@ -249,7 +260,8 @@ class Simulation:
             psiPlot -- 2D numpy array of the integrated z density from realTimeProp
         
         """
-        
+        xx,tt = np.meshgrid(cp.asnumpy(self.z),np.arange(self.TIME_PTS+1)*self.dt)
+
         fig = plt.figure(2)   # Clear figure 2 window and bring forward
         ax = fig.gca(projection='3d')
         surf = ax.plot_surface(xx, tt, psiPlot, rstride=1, cstride=1, cmap=cm.jet,linewidth=0, antialiased=False)
@@ -269,9 +281,9 @@ class Simulation:
         y_min = 0
         y_max = np.max(psiPlot)
         
-        fig = plt.figure(num=3, figsize=(8, 6), dpi=80)
+        fig = plt.figure(figsize=(8, 6), dpi=80)
         fig.set_size_inches(8, 6, forward=True)
-        ax = plt.axes(xlim=(za, zb), ylim=(y_min, y_max))
+        ax = plt.axes(xlim=(self.ZA, self.ZB), ylim=(y_min, y_max))
         ax.set_title('Time Evolution of Linear Z-Density')
         ax.set_xlabel('z')
         ax.set_ylabel(r'$|\psi|^2$')
@@ -285,12 +297,12 @@ class Simulation:
         # animation function.  This is called sequentially
         def animate(i):
             y = psiPlot[i,:]
-            line.set_data(z_np, y)
+            line.set_data(cp.asnumpy(self.z), y)
             return line,
         
         # call the animator.  blit=True means only re-draw the parts that have changed.
         anim = animation.FuncAnimation(fig, animate, init_func=init,
-                                       frames=int(TIME_PTS/RED_COEFF), interval=60.0, blit=True)
+                                       frames=int(self.TIME_PTS), interval=60.0, blit=True)
         
         # save the animation as an mp4.  This requires ffmpeg or mencoder to be
         # installed.  The extra_args ensure that the x264 codec is used, so that
@@ -299,7 +311,9 @@ class Simulation:
         # http://matplotlib.sourceforge.net/api/animation_api.html
         #
         # This will save the animation to file animation.mp4 by default
-        anim.save(animation_filename, fps=150, dpi=150)
+        
+        if savePath:
+            anim.save(savePath, fps=150, dpi=150)
     
     
     

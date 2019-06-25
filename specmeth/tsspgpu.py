@@ -86,8 +86,8 @@ def realTimePropagation(solution):
 surf_plot_on = 0
 
 # Animation Input Parameters
-animation_on = 0
-animation_filename = 'Animations/animation.mp4' # filename for animation output
+animation_on = 1
+animation_filename = '../Animations/animation.mp4' # filename for animation output
 
 # Spatial Points
 N = 32
@@ -101,7 +101,7 @@ LX = L
 LY = L
 LZ = 375.0
 
-TIME = 250.0
+TIME = 2.500
 
 # Start and end points in space
 xa = -LX/2
@@ -116,7 +116,7 @@ hx = LX/NX
 hy = LY/NY
 hz = LZ/NZ
 
-TIME_PTS = 14000
+TIME_PTS = 140
 RED_COEFF = 1
 
 dt = TIME/TIME_PTS
@@ -148,7 +148,7 @@ sigmaz = np.sqrt(1/WZ)
 psi_init = 1/cp.sqrt(2*cp.pi) * cp.einsum('i,j,k->ijk', cp.exp(-x**2/(2*sigma**2)), cp.exp(-y**2/(2*sigma**2)), cp.exp(-z**2/(2*sigmaz**2)))
 
 # Load Ground State from File
-psi_init = np.loadtxt('GroundStateSave/gs1.txt', dtype=float)
+psi_init = np.loadtxt('../GroundStateSave/gs1.txt', dtype=float)
 psi_init = np.reshape(psi_init, (NX, NY, NZ))
 
 ## Plot the z-axis of the ground state
@@ -233,7 +233,7 @@ if animation_on:
     # http://matplotlib.sourceforge.net/api/animation_api.html
     #
     # This will save the animation to file animation.mp4 by default
-    anim.save(animation_filename, fps=150, dpi=150)
+#    anim.save(animation_filename, fps=150, dpi=150)
 
 
 # -------------- Mode Analysis -------------------
