@@ -16,6 +16,7 @@ TODO:
     otherwise)
     
     2) Reduction coefficient
+    3) Display time on animation
 """
 
 class Simulation:
@@ -269,7 +270,7 @@ class Simulation:
         ax.set_ylabel('Time')
         ax.set_zlabel('Amplitude')
     
-    def animateSol(self, psiPlot, savePath=''):
+    def animateSol(self, psiPlot, savePath):
         """
         This function will generate an animation of the time evolution of psi
         as given in psiPlot. This animation can be saved by passing in the 
@@ -288,6 +289,7 @@ class Simulation:
         ax.set_xlabel('z')
         ax.set_ylabel(r'$|\psi|^2$')
         line, = ax.plot([], [], lw=2)
+        time_text = ax.text( 0.65*self.ZB, 0.9 * y_max, '')
         
         # initialization function: plot the background of each frame
         def init():
@@ -298,7 +300,8 @@ class Simulation:
         def animate(i):
             y = psiPlot[i,:]
             line.set_data(cp.asnumpy(self.z), y)
-            return line,
+            time_text.set_text(f'time = {self.dt * i:3.3f}')
+            return line, time_text
         
         # call the animator.  blit=True means only re-draw the parts that have changed.
         anim = animation.FuncAnimation(fig, animate, init_func=init,
