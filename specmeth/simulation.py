@@ -16,7 +16,6 @@ TODO:
     otherwise)
     
     2) Reduction coefficient
-    3) Display time on animation
 """
 
 class Simulation:
@@ -135,7 +134,46 @@ class Simulation:
         Retrieves an initial condition or ground state that has been saved from
         the saveSolution method        
         """
-        pass
+        
+        # Check to make sure the ground state is compatible with 
+        # the simulation object being used to load it
+        infoPath = path.split('/')
+        targetFile = infoPath[-1]
+        infoPath[-1] = 'info.txt'
+        '/'.join(infoPath)
+        
+        f = open(infoPath, 'r')
+        infoFound = False
+        
+        for x in f:
+            line = x
+            line = line.split(' ')
+            filename = line[0]
+            
+            if filename == targetFile:
+                data = line[2::2]
+                data = [float(q) for q in data]
+                
+                assert data[0] == self.NX and data[1] == self.NY \
+                and data[2] == self.NZ, "Your target file has a different number of spatial grid points"
+                
+                assert np.abs(data[3] - self.LX)/self.LX < 10**-8 and np.abs(data[4] - self.LY)/self.LY < 10**-8 \
+                and np.abs(data[5] - self.LZ)/self.LZ < 10**-8, "Your target file has different spatial dimensions"
+                
+                assert np.abs(data[6] - self.WX) < 10**-8 and np.abs(data[7] - self.WY) < 10**-8 \
+                and np.abs(data[8] - self.WZ) < 10**-8, "Your target file has different trapping frequencies"
+                
+                assert np.abs(data[9] - self.G0) < 10**-8, "Your target file has a different scattering length"
+                
+                break
+        else:
+            print('Could not find information for target file')
+            
+                
+        psi_init = np.loadtxt(path, dtype=float)
+        psi_init = np.reshape(psi_init, (self.NX, self.NY, self.NZ))
+        
+        return psi_init
     
     # --------------------- Real Time Propagation -------------------------
     
@@ -247,7 +285,8 @@ class Simulation:
         solutionSaveFormat = np.reshape(solution, (self.NX*self.NY,self.NZ))
         np.savetxt(savePath, solutionSaveFormat, fmt='%e')
         file = open(savePath, 'a')
-        file.write(f'{savePath} NX {NX} NY {NY} NZ {NZ} LX {LX} LY {LY} LZ {LZ} WX {WX} WY {WY} WZ {WZ}\n')
+        filename = savePath.split('/')[-1]
+        file.write(f'{filename} NX {NX} NY {NY} NZ {NZ} LX {LX} LY {LY} LZ {LZ} WX {WX} WY {WY} WZ {WZ}\n')
         file.close()
         
     
