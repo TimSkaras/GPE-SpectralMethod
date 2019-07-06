@@ -52,7 +52,7 @@ G0 = 1070.
 
 gVars = np.array([OMEGA, EPS, MOD_TIME, G0])
 
-GPU = True
+GPU = False
 
 faradayTest = simulation.Simulation(gridDim, regionDim, startEnd, trapVars, gVars, GPU)
 
@@ -61,7 +61,7 @@ faradayTest = simulation.Simulation(gridDim, regionDim, startEnd, trapVars, gVar
 # Load Ground State from File
 psi_init = np.loadtxt('../GroundStateSave/gs1.txt', dtype=float)
 psi_init = np.reshape(psi_init, (NX, NY, NZ))
-psi_init = cp.asarray(psi_init)
+#psi_init = cp.asarray(psi_init)
 
 psiPlot = faradayTest.realTimeProp(psi_init)
 

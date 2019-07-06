@@ -16,6 +16,13 @@ TODO:
     otherwise)
     
     2) Reduction coefficient
+    
+    4) Delete uneeded files
+    
+    5) Test plane wave and homogeneous case
+    
+    6) Redo simulations for emergence of pereturbations
+    
 """
 
 class Simulation:
@@ -123,12 +130,12 @@ class Simulation:
         xp = cp.get_array_module(waveFunction)
         
         # Potential at each grid point
-        energy = xp.sum(-xp.conj(waveFunction)*0.5*stencil(waveFunction) 
-        + xp.conj(waveFunction)*self.potential*waveFunction 
+        energy = xp.sum(-xp.conj(waveFunction)*0.5*self.stencil(waveFunction) \
+        + xp.conj(waveFunction)*self.potential*waveFunction \
         + self.G0 * xp.abs(waveFunction)**4)*self.hx*self.hy*self.hz
-    
-        return energy
-    
+                    
+        return xp.float(energy)
+        
     def loadSolution(self, path):
         """
         Retrieves an initial condition or ground state that has been saved from
@@ -140,7 +147,7 @@ class Simulation:
         infoPath = path.split('/')
         targetFile = infoPath[-1]
         infoPath[-1] = 'info.txt'
-        '/'.join(infoPath)
+        infoPath = '/'.join(infoPath)
         
         f = open(infoPath, 'r')
         infoFound = False
@@ -155,19 +162,24 @@ class Simulation:
                 data = [float(q) for q in data]
                 
                 assert data[0] == self.NX and data[1] == self.NY \
-                and data[2] == self.NZ, "Your target file has a different number of spatial grid points"
+                and data[2] == self.NZ, "Could not load file. Your target file has a number of spatial grid points that differs from your simulation instance"
                 
-                assert np.abs(data[3] - self.LX)/self.LX < 10**-8 and np.abs(data[4] - self.LY)/self.LY < 10**-8 \
-                and np.abs(data[5] - self.LZ)/self.LZ < 10**-8, "Your target file has different spatial dimensions"
+                if not (np.abs(data[3] - self.LX)/self.LX < 10**-8 and np.abs(data[4] - self.LY)/self.LY < 10**-8 \
+                and np.abs(data[5] - self.LZ)/self.LZ < 10**-8):
+                    print("Warning: Your target file has spatial dimensions that differ from your simulation instance")
                 
-                assert np.abs(data[6] - self.WX) < 10**-8 and np.abs(data[7] - self.WY) < 10**-8 \
-                and np.abs(data[8] - self.WZ) < 10**-8, "Your target file has different trapping frequencies"
+                if not (np.abs(data[6] - self.WX) < 10**-8 and np.abs(data[7] - self.WY) < 10**-8 \
+                and np.abs(data[8] - self.WZ) < 10**-8):
+                    print("Warning: Your target file has trapping frequencies that differ from your simulation instance")
                 
-                assert np.abs(data[9] - self.G0) < 10**-8, "Your target file has a different scattering length"
+                if not np.abs(data[9] - self.G0) < 10**-8:
+                    print("Warning: Your target file has a scattering length that differs your simulation instance")
                 
                 break
         else:
-            print('Could not find information for target file')
+            print('Could not find information for target file. Please \
+                  ensure you have correctly specified the file you are \
+                  trying to load.')
             
                 
         psi_init = np.loadtxt(path, dtype=float)
@@ -233,7 +245,7 @@ class Simulation:
         xp = cp.get_array_module(waveFunction)
         return waveFunction/self.getNorm(xp.abs(waveFunction)**2)
     
-    @jit(nopython=True)
+#    @jit(nopython=True)
     def stencil(self, solution):
         """
         Finds Laplacian of solution assuming periodic boundary conditions
@@ -246,7 +258,7 @@ class Simulation:
     
         return stencilArray
     
-    def imagTimeProp(self, solution, tol):
+    def imagTimeProp(self, solution, tol, max_iter=50000):
         """
         
         Uses a simple forward Euler method to find ground state to within desired tolerance
@@ -255,8 +267,7 @@ class Simulation:
         xp = cp.get_array_module(solution)
         res = 1.0
         iterations = 0
-        energyPlot = np.array([getEnergy(normalize(solution))])
-        max_iter = 50000
+        energyPlot = np.array([self.getEnergy(self.normalize(solution))])
 
         while res > tol and iterations < max_iter :
             iterations += 1
@@ -265,7 +276,7 @@ class Simulation:
             if iterations % 10 == 0:
                 new_solution = self.normalize(new_solution)
                 energyPlot = np.append(energyPlot, self.getEnergy(new_solution))
-                res = np.abs(energyPlot[-1] - energyPlot[-2])/energyPlot[-2]/dt
+                res = np.abs(energyPlot[-1] - energyPlot[-2])/energyPlot[-2]/self.dt
                 
             solution = xp.copy(new_solution)
             
@@ -280,13 +291,19 @@ class Simulation:
         Save the output groundstate from imaginary time propagation method
         
         """
-        xp = cp.get_array_module(solution)
+        solution= cp.asnumpy(solution)
         # Convert to 2D array because it is hard to store 3D arrays
         solutionSaveFormat = np.reshape(solution, (self.NX*self.NY,self.NZ))
         np.savetxt(savePath, solutionSaveFormat, fmt='%e')
-        file = open(savePath, 'a')
+        
+        # Now open info.txt to save information on this file
+        infoPath = savePath.split('/')
+        infoPath[-1] = 'info.txt'
+        infoPath = '/'.join(infoPath)
+        
+        file = open(infoPath, 'a')
         filename = savePath.split('/')[-1]
-        file.write(f'{filename} NX {NX} NY {NY} NZ {NZ} LX {LX} LY {LY} LZ {LZ} WX {WX} WY {WY} WZ {WZ}\n')
+        file.write(f'{filename} NX {self.NX} NY {self.NY} NZ {self.NZ} LX {self.LX} LY {self.LY} LZ {self.LZ} WX {self.WX} WY {self.WY} WZ {self.WZ} G {self.G0}\n')
         file.close()
         
     
