@@ -17,9 +17,9 @@ TODO:
     
     2) Reduction coefficient
     
-    4) Delete uneeded files
-    
     5) Test plane wave and homogeneous case
+    
+    5b) Spiffy up documentation
     
     6) Redo simulations for emergence of pereturbations
     
@@ -118,7 +118,7 @@ class Simulation:
     
     def getNorm(self, psiSquared):
         """
-        Finds norm for a given state of psi squared
+        Finds norm for a given state of psi squared along the z-axis
         """
         xp = cp.get_array_module(psiSquared)
         return xp.sqrt(xp.sum(psiSquared*self.hz))
@@ -197,12 +197,13 @@ class Simulation:
         xp = cp.get_array_module(waveFunction)        
         return xp.sum(xp.abs(waveFunction)**2, axis=(0,1))*self.hx*self.hy
     
-    def realTimeProp(self, solution):
+    def realTimeProp(self, solution, outputFinalAns = False):
         """
         This function numerically solves the GPE in real time using the spectral method
         
         RETURNS:
             psiPlot -- numpy array with linear z-density as func of time
+            outputFinalAns -- by default False. Set to True if you want the method to output the final solution
         
         """
         xp = cp.get_array_module(solution)
@@ -233,7 +234,10 @@ class Simulation:
             # Save Solution for plotting
             psiPlot = np.vstack((psiPlot, cp.asnumpy(self.reduceIntegrate(solution)))) 
             
-        return psiPlot
+        if outputFinalAns:
+            return psiPlot, solution
+        else:
+            return psiPlot
     
     
     # ------------------- Imaginary Time Propagation -------------------------
