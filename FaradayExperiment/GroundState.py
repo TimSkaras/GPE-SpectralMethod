@@ -10,19 +10,19 @@ from numba import jit
 import simulation
 
 # Spatial Points
-N = 32
+N = 64
 NX = N
 NY = N
-NZ = 512
-TIME_PTS = 125
+NZ = N
+TIME_PTS = 400
 
 gridDim = np.array([NX, NY, NZ, TIME_PTS])
 
 # Trap length
-L = 12.0
+L = 15.0
 LX = L
 LY = L
-LZ = 375.0
+LZ = L
 TIME = 2.500
 
 regionDim = np.array([LX, LY, LZ, TIME])
@@ -39,7 +39,7 @@ startEnd = np.array([xa, xb, ya, yb, za, zb])
 
 WX = 1. # trapping frequency
 WY = 1.
-WZ = 7./476.
+WZ = 1.
 
 trapVars = np.array([WX, WY, WZ])
 
@@ -64,23 +64,20 @@ sigma = 1.0
 sigmaz = xp.sqrt(1/WZ)
 psi_init = 1/xp.sqrt(2*xp.pi) * xp.einsum('i,j,k->ijk', xp.exp(-simulationTest.x**2/(2*sigma**2)), \
                      xp.exp(-simulationTest.y**2/(2*sigma**2)), xp.exp(-simulationTest.z**2/(2*sigmaz**2))/sigmaz)
-tol = 10**-6
+tol = 10**-9
 
 begin = timeit.default_timer()
 solution = simulationTest.imagTimeProp(psi_init, tol)
 end = timeit.default_timer()
 
-dV = simulationTest.hx*simulationTest.hy*simulationTest.hz
-npsolution = cp.asnumpy(solution)
 print(f'Time Elapsed = {end-begin}')
-print(f'Solution Norm = {dV*np.sum(np.abs(npsolution)**2)}')
 
-savePath = '../GroundStateSave/test.txt'
+savePath = '../GroundStateSave/gs2.txt'
 
-#simulationTest.saveSolution(solution, savePath)
+simulationTest.saveSolution(solution, savePath)
 
-#loadPath = '../GroundStateSave/gs1.txt'
-#solution = simulationTest.loadSolution(loadPath)
+loadPath = '../GroundStateSave/gs2.txt'
+solution = simulationTest.loadSolution(loadPath)
 
 # Arrays needed for plotting
 y_np = simulationTest.hy*np.arange(NY) + ya

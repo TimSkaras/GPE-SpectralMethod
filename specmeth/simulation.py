@@ -16,9 +16,7 @@ TODO:
     otherwise)
     
     2) Reduction coefficient
-    
-    5) Test plane wave and homogeneous case
-    
+        
     5b) Spiffy up documentation
     
     6) Redo simulations for emergence of pereturbations
@@ -123,7 +121,7 @@ class Simulation:
         xp = cp.get_array_module(psiSquared)
         return xp.sqrt(xp.sum(psiSquared*self.hz))
     
-    def getEnergy(self, waveFunction):
+    def getEnergy(self, waveFunction, t = 0):
         """
         Finds expectation value of Hamiltonian for given wave function
         """
@@ -132,9 +130,9 @@ class Simulation:
         # Potential at each grid point
         energy = xp.sum(-xp.conj(waveFunction)*0.5*self.stencil(waveFunction) \
         + xp.conj(waveFunction)*self.potential*waveFunction \
-        + self.G0 * xp.abs(waveFunction)**4)*self.hx*self.hy*self.hz
+        + self.scatLen(t) * xp.abs(waveFunction)**4)*self.hx*self.hy*self.hz
                     
-        return xp.float(energy)
+        return xp.float(xp.abs(energy))
         
     def loadSolution(self, path):
         """
@@ -197,7 +195,7 @@ class Simulation:
         xp = cp.get_array_module(waveFunction)        
         return xp.sum(xp.abs(waveFunction)**2, axis=(0,1))*self.hx*self.hy
     
-    def realTimeProp(self, solution, outputFinalAns = False):
+    def realTimeProp(self, solution, outputFinalAns = False, outputEnergyPlot = False):
         """
         This function numerically solves the GPE in real time using the spectral method
         
@@ -214,8 +212,9 @@ class Simulation:
         muz = 2*xp.pi/self.LZ * xp.arange(-self.NZ/2, self.NZ/2)
         muExpTerm = xp.einsum('i,j,k->ijk', xp.exp(-1j*self.dt*mux**2/2.), xp.exp(-1j*self.dt*muy**2/2.), xp.exp(-1j*self.dt*muz**2/2.))
         muExpTerm = xp.fft.ifftshift(muExpTerm)
-            
         
+        energyPlot = np.array([self.getEnergy(solution)])
+            
         for p in range(self.TIME_PTS):
             
             # Step One -- potential and interaction term
@@ -231,13 +230,20 @@ class Simulation:
             expTerm = xp.exp(-1j* (self.potential + self.scatLen((p + 0.5)*self.dt)*xp.abs(solution)**2)*self.dt/2.0)
             solution = expTerm*solution
             
+            # Calculate energy if necessary
+            if outputEnergyPlot:
+                energyPlot = np.append(energyPlot, self.getEnergy(solution, t = p*self.dt))
+            
             # Save Solution for plotting
             psiPlot = np.vstack((psiPlot, cp.asnumpy(self.reduceIntegrate(solution)))) 
-            
+        
+        output = [psiPlot]
         if outputFinalAns:
-            return psiPlot, solution
-        else:
-            return psiPlot
+            output.append(cp.asnumpy(solution))
+        if outputEnergyPlot:
+            output.append(energyPlot)
+        
+        return output
     
     
     # ------------------- Imaginary Time Propagation -------------------------
@@ -247,7 +253,8 @@ class Simulation:
         Takes unnormalized wave function and normalizes it to one
         """
         xp = cp.get_array_module(waveFunction)
-        return waveFunction/self.getNorm(xp.abs(waveFunction)**2)
+        dV = self.hx*self.hy*self.hz
+        return waveFunction/xp.sqrt(xp.sum(xp.abs(waveFunction)**2)*dV)
     
 #    @jit(nopython=True)
     def stencil(self, solution):

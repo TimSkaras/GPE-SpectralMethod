@@ -50,7 +50,7 @@ G0 = 10.
 
 gVars = np.array([OMEGA, EPS, MOD_TIME, G0])
 
-GPU = False
+GPU = True
 
 planeWaveTest = simulation.Simulation(gridDim, regionDim, startEnd, trapVars, gVars, GPU)
 

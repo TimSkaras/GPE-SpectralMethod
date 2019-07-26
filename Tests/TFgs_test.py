@@ -10,16 +10,16 @@ from numba import jit
 import simulation
 
 # Spatial Points
-N = 50
+N = 64
 NX = N
 NY = N
 NZ = N
-TIME_PTS = 350
+TIME_PTS = 450
 
 gridDim = np.array([NX, NY, NZ, TIME_PTS])
 
 # Trap length
-L = 10.0
+L = 15.0
 LX = L
 LY = L
 LZ = L
@@ -45,7 +45,7 @@ WZ = W
 trapVars = np.array([WX, WY, WZ])
 
 OMEGA = 2.0
-EPS = 0.2
+EPS = 0.0
 MOD_TIME = 5*np.pi
 G0 = 1070.
 
@@ -65,12 +65,14 @@ sigma = 1.0
 sigmaz = xp.sqrt(1/WZ)
 psi_init = 1/xp.sqrt(2*xp.pi) * xp.einsum('i,j,k->ijk', xp.exp(-simulationTest.x**2/(2*sigma**2)), \
                      xp.exp(-simulationTest.y**2/(2*sigma**2)), xp.exp(-simulationTest.z**2/(2*sigmaz**2))/sigmaz)
-tol = 10**-6
+tol = 10**-15
 
 begin = timeit.default_timer()
-#solution = simulationTest.imagTimeProp(psi_init, tol)
+solution = simulationTest.imagTimeProp(psi_init, tol)
 end = timeit.default_timer()
-
+dV = simulationTest.hx*simulationTest.hy*simulationTest.hz
+print(f'Numerically Calculated Energy = {simulationTest.getEnergy(solution)}')
+print(f'Numerical Solution Norm = {np.sum(np.abs(cp.asnumpy(solution))**2) *dV}')
 
 # Calculate analytic with TF ground state solution
 mu = 0.5 * (15./4 * G0 * W**3/np.pi)**(2./5)
@@ -78,28 +80,30 @@ TFgs = (mu - cp.asnumpy(simulationTest.potential))/G0
 idxZero = np.where(TFgs < 0)
 TFgs[idxZero] = 0.0
 TFgs = np.sqrt(TFgs)
-dV = simulationTest.hx*simulationTest.hy*simulationTest.hz
-print(f'norm = {np.sum(TFgs**2) *dV}')
+print(f'Analytic Answer Energy = {simulationTest.getEnergy(xp.asarray(TFgs))}')
+#print(f'norm = {np.sum(TFgs**2) *dV}')
+
 
 y_np = simulationTest.hy*np.arange(NY) + ya
 z_np = simulationTest.hz*np.arange(NZ) + za
 zz,yy = np.meshgrid(z_np, y_np)
+
+
 
 fig = plt.figure(2)   # Clear figure 2 window and bring forward
 ax = fig.gca(projection='3d')
-surf = ax.plot_surface(zz, yy, np.sum(np.abs(cp.asnumpy(solution))**2, axis=(0))*simulationTest.hx, rstride=1, cstride=1, cmap=cm.jet,linewidth=0, antialiased=False)
+ax.plot_wireframe(zz, yy, np.sum(np.abs(cp.asnumpy(solution))**2, axis=(0))*simulationTest.hx)
 ax.set_xlabel('Z-Axis')
 ax.set_ylabel('Y-Axis')
-ax.set_zlabel('Amplitude)')
+ax.set_zlabel('Amplitude')
+ax.set_title('Numerical Solution')
 
-
-y_np = simulationTest.hy*np.arange(NY) + ya
-z_np = simulationTest.hz*np.arange(NZ) + za
-zz,yy = np.meshgrid(z_np, y_np)
 
 fig = plt.figure(3)   # Clear figure 2 window and bring forward
 ax = fig.gca(projection='3d')
-surf = ax.plot_surface(zz, yy, np.sum(np.abs(cp.asnumpy(TFgs))**2, axis=(0))*simulationTest.hx, rstride=1, cstride=1, cmap=cm.jet,linewidth=0, antialiased=False)
+#surf = ax.plot_surface(zz, yy, np.sum(np.abs(cp.asnumpy(TFgs))**2, axis=(0))*simulationTest.hx, rstride=1, cstride=1, cmap=cm.jet,linewidth=0, antialiased=False)
+ax.plot_wireframe(zz, yy, np.sum(np.abs(cp.asnumpy(TFgs))**2, axis=(0))*simulationTest.hx)
 ax.set_xlabel('Z-Axis')
 ax.set_ylabel('Y-Axis')
-ax.set_zlabel('Amplitude)')
+ax.set_zlabel('Amplitude')
+ax.set_title('Analytic Solution')
