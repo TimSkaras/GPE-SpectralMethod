@@ -1,6 +1,14 @@
 \documentclass[12]{article}
 \usepackage[margin=1in]{geometry}
-\usepackage{graphicx, float,amsmath, physics, mhchem, amssymb}
+\usepackage{graphicx, float,amsmath, physics, amssymb}
+\usepackage{physics,hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=black,      
+    urlcolor=blue,
+    citecolor=black,
+}
 
 \begin{document}
 \begin{flushright}
@@ -15,7 +23,7 @@ Advisor: Professor Mustafa Amin
 
 \section{Introduction}
 
-Bose-Einstein Condensation (BEC) is a state of matter in boson gases that results when atoms, cooled very close to absolute zero, abruptly accumulate in their ground state \cite{schroeder1999introduction}. This state of matter has been experimentally realized using various atomic vapors \cite{pethick2008bose}. In particular, a laboratory here at Rice led by Professor Randall Hulet has studied Bose-Einstein Condensation in lithium. Professor Hulet's lab is able to tune the interaction strength between atoms by exploiting a shallow zero-crossing of a Feshbach resonance, and, due to nonlinearity, this can result in rich dynamics such as the creation of matter-wave soliton trains \cite{nguyen2017formation}. Because it is difficult to study nonlinear systems analytically, computational tools have been important for understanding the behavior of these systems.\\
+Bose-Einstein Condensation (BEC) is a state of matter in boson gases that results when atoms, cooled very close to absolute zero, abruptly accumulate in their ground state \cite{schroeder1999introduction}. This state of matter has been experimentally realized using various atomic vapors \cite{pethick2008bose}. In particular, a laboratory here at Rice led by Professor Randall Hulet has studied Bose-Einstein Condensation in lithium. Professor Hulet's lab is able to tune the interaction strength between atoms by exploiting a shallow zero-crossing of a Feshbach resonance, and, due to nonlinearity, this can result in rich dynamics such as the creation of matter-wave soliton trains \cite{nguyen2017formation}. Because it is difficult to study nonlinear systems analytically, computational tools have been important for understanding the behavior of these systems.
 
 \subsection{Project Overview}
 
@@ -43,7 +51,20 @@ Time reversible means that if the solution $\psi_{n+1}$ at $t_{n+1}$ is obtained
 
 \subsection{Implementation and Validation}
 
-I have implemented this spectral method in python\footnote{https://github.com/TimSkaras/GPE-SpectralMethod}. I used the CuPy package\footnote{https://cupy.chainer.org} to implement this method because this package provides a NumPy-like environment that performs computations with GPUs. This allowed my code to acheive considerable speedup (almost an order of magnitude for certain problems) over a serial implementation.
+I have implemented this spectral method in Python\footnote{My \href{https://github.com/TimSkaras/GPE-SpectralMethod}{github} repository}. I used the CuPy package\footnote{\href{https://cupy.chainer.org}{CuPy website}} to implement this method because this package provides a NumPy-like environment that performs computations on a GPU. This allowed my code to acheive considerable speedup (almost an order of magnitude for certain problems) over a serial implementation. I will now consider some of the test cases that I have used to ensure I have correctly implemented the time-splitting spectral method and the imaginary time propagation method.
+
+\subsubsection{Homogeneous Solution}
+
+It can be trivially verified that
+\begin{equation}
+\psi(t) = A e^{-i g|A|^2 t}, \quad A \in \mathbb{C}
+\end{equation}
+is a solution to (\ref{GPE3D}). It should be noted that the method will accurately solve a constant intial condition ($\psi(\textbf{x},0) = A$) only when the time step is small compared to the period of oscillation which is determined by $\omega = g |A|^2$.
+\subsubsection{Plane Wave}
+
+\subsubsection{Thomas-Fermi Ground State}
+
+\section{Results}
 
 \bibliographystyle{abbrv}
 \bibliography{FaradayExperimentBib}
