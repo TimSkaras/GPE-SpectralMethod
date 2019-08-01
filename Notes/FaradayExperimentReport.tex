@@ -1,0 +1,51 @@
+\documentclass[12]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx, float,amsmath, physics, mhchem, amssymb}
+
+\begin{document}
+\begin{flushright}
+Tim Skaras
+
+Advisor: Professor Mustafa Amin
+\end{flushright}
+
+\begin{center}
+{\LARGE Faraday Wave Experiment}
+\end{center}
+
+\section{Introduction}
+
+Bose-Einstein Condensation (BEC) is a state of matter in boson gases that results when atoms, cooled very close to absolute zero, abruptly accumulate in their ground state \cite{schroeder1999introduction}. This state of matter has been experimentally realized using various atomic vapors \cite{pethick2008bose}. In particular, a laboratory here at Rice led by Professor Randall Hulet has studied Bose-Einstein Condensation in lithium. Professor Hulet's lab is able to tune the interaction strength between atoms by exploiting a shallow zero-crossing of a Feshbach resonance, and, due to nonlinearity, this can result in rich dynamics such as the creation of matter-wave soliton trains \cite{nguyen2017formation}. Because it is difficult to study nonlinear systems analytically, computational tools have been important for understanding the behavior of these systems.\\
+
+\subsection{Project Overview}
+
+More recently, Professor Hulet's lab has performed experiments on the emergence of Faraday Waves in a Bose-Einstein Condensate by periodically modulating the scattering length for these atoms. In these experiments, they have modulated the scattering length periodically for a fixed period of time. Then after holding the scattering length constant, they observe that perturbations of particular wavenumbers will grow rapidly, resulting in the emergence of faraday waves.
+
+Using a mean field theory, it can be shown that the dynamics of a Bose-Einstein condensate are governed by the time-dependent Gross-Pitaevskii Equation \cite{pethick2008bose}, which in natural units is given by
+\begin{equation}
+i \pdv{\psi}{t} = -\frac{1}{2}\laplacian{\psi} + V(\vb{x})\psi + g |\psi|^2 \psi
+\label{GPE3D}
+\end{equation}
+\nolinebreak
+where $\psi$ is a field describing the number density of atoms in real space and $g$ is a parameter corresponding to the interaction strength between atoms ($g>0$ corresponding to repulsive interactions and $g < 0$ corresponding to attractive interactions).
+
+In this project, I numerically solve this nonlinear, partial differential equation assuming a cigar-shaped trapping potential in three spatial dimensions to computationally confirm recent experimental results from Professor Hulet's lab by showing that the BEC's perturbations in Fourier space grow in the expected way.
+
+\subsection{Methods}
+
+To solve this nonlinear PDE, I use a time-splitting spectral (TSSP) method while assuming periodic boundary conditions. The general idea behind applying this method is that some operators on the RHS of (\ref{GPE3D}) are easy to apply in momentum space (e.g., the second order derivative) and some are easy to apply in position space (e.g., the potential term). To exploit this fact, this method involves shifting the wave function solution between its real space and momentum space representation via fourier transformation and applying each operator component in the space it is most easily applied. 
+
+Before I can start solving the nonlinear PDE, however, I must find the correct initial condition. These experiments in Hulet's lab are performed on BEC that is very close to its ground state. The ground state for the GPE is not known analytically in this trapping potential, so I will use finite difference methods to implement the Imaginary Time Propagation method \cite{chiofalo2000ground, muruganandam2009fortran}, which will allow me to numerically calculate the ground state.
+
+The TSSP method is described in detail in \cite{bao2003numerical} for a one dimensional version of the GPE, and the method can be straightforwardly generalized to three spatial dimensions without affecting the method's validity. The advantages of this method are multifold: the TSSP method is unconditionally stable, time reversible, time-transverse invariant, conserves particle number, and is second order accurate in space and time \cite{bao2003numerical}. One noteworthy drawback is that this method is not symplectic, i.e., it does not conserve energy.
+
+Time reversible means that if the solution $\psi_{n+1}$ at $t_{n+1}$ is obtained by applying the TSSP method to the solution $\psi_n$ at $t_n$, then the past state can be re-obtained from $\psi_{n+1}$ by using TSSP with time step $-\Delta t = -(t_{n+1} - t_n)$. Time-transverse invariance or gauge invariance refers to the property of the GPE that if $V \rightarrow V + \alpha$ where $\alpha \in \mathbb{R}$, then the solution $\psi \rightarrow \psi e^{i\alpha t}$, which implies that number density of atoms $|\psi|^2$ is unchanged under this transformation. This method respects this property by producing the corresponding changes in $\psi$ when $V$ is transformed in this way \cite{antoine2013computational}.
+
+\subsection{Implementation and Validation}
+
+I have implemented this spectral method in python\footnote{https://github.com/TimSkaras/GPE-SpectralMethod}. I used the CuPy package\footnote{https://cupy.chainer.org} to implement this method because this package provides a NumPy-like environment that performs computations with GPUs. This allowed my code to acheive considerable speedup (almost an order of magnitude for certain problems) over a serial implementation.
+
+\bibliographystyle{abbrv}
+\bibliography{FaradayExperimentBib}
+
+\end{document}

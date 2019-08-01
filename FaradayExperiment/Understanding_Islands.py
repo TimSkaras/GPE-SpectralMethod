@@ -51,7 +51,7 @@ G0 = 1070.
 
 gVars = np.array([OMEGA, EPS, MOD_TIME, G0])
 
-GPU = False
+GPU = True
 
 faradayTest = simulation.Simulation(gridDim, regionDim, startEnd, trapVars, gVars, GPU)
 

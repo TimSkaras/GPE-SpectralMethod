@@ -130,7 +130,7 @@ class Simulation:
         # Potential at each grid point
         energy = xp.sum(-xp.conj(waveFunction)*0.5*self.stencil(waveFunction) \
         + xp.conj(waveFunction)*self.potential*waveFunction \
-        + self.scatLen(t) * xp.abs(waveFunction)**4)*self.hx*self.hy*self.hz
+        + 1./2*self.scatLen(t) * xp.abs(waveFunction)**4)*self.hx*self.hy*self.hz
                     
         return xp.float(xp.abs(energy))
         
