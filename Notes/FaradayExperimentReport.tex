@@ -59,8 +59,16 @@ It can be trivially verified that
 \begin{equation}
 \psi(t) = A e^{-i g|A|^2 t}, \quad A \in \mathbb{C}
 \end{equation}
-is a solution to (\ref{GPE3D}). It should be noted that the method will accurately solve a constant intial condition ($\psi(\textbf{x},0) = A$) only when the time step is small compared to the period of oscillation which is determined by $\omega = g |A|^2$.
+is a solution to (\ref{GPE3D}). It should be noted that the method will accurately solve a constant intial condition ($\psi(\textbf{x},0) = A$) only when the time step is small compared to the period of oscillation which is determined by angular frequency $\omega = g |A|^2$. In the file \href{https://github.com/TimSkaras/GPE-SpectralMethod/blob/master/Tests/homogeneous_test.py}{homogeneous\_test.py}, I solve a homogeneous initial condition with $A = \frac{1}{2}$ and $g = 10$ thus giving $T = \frac{2\pi}{\omega} = 2.51$. Our time step is $\Delta t \approx 0.0179$. For more details on parameters, see the file linked in this document.
+
+After solving the problem with these initial conditions until $t = 2.5$. When the code is run using a GPU, the maximum error at any one gridpoint is on the order of $10^{-14}$ and the norm loss ratio (the change in the norm divided by the norm at $t=0$) is also on the order of $10^{-14}$. Running the code in serial gives a max error and norm loss ratio of the same order of magnitude.
+
 \subsubsection{Plane Wave}
+
+It is also possible to show that the Gross-Pitaevskii Equation admits a plane wave solution with the form
+\begin{equation}
+\psi(x,t) = 
+\end{equation}
 
 \subsubsection{Thomas-Fermi Ground State}
 

@@ -62,7 +62,7 @@ else:
     xp = np
 
 # Choose homogeneous initial condition
-A = .01
+A = .5
 psi_init = xp.ones((NX,NY,NZ))*A
 #psi_init = cp.asarray(psi_init)
 
@@ -70,6 +70,7 @@ psiPlot, solution = homogeneousTest.realTimeProp(psi_init, True)
 
 # Find max error for validation
 analyticAns = A*xp.exp(-1j*G0*np.abs(A)**2*TIME)
-maxErr = xp.max(xp.abs(solution - analyticAns))
+maxErr = np.max(np.abs(cp.asnumpy(solution) - cp.asnumpy(analyticAns)))
 print(f'Max Error = {maxErr}')
+print(f'Norm Loss Ratio = {(homogeneousTest.getNorm( psiPlot[-1,:]) - homogeneousTest.getNorm( psiPlot[0,:]))/homogeneousTest.getNorm( psiPlot[0,:])}')
 
