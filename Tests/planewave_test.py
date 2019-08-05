@@ -62,10 +62,10 @@ else:
     xp = np
 
 # Choose homogeneous initial condition
-A = .01
-kx = 0.0
-ky = 2*np.pi/LY*3
-kz = 2*np.pi/LZ*2
+A = .5
+kx = 2*np.pi/LX*1
+ky = 2*np.pi/LY*2
+kz = 2*np.pi/LZ*3
 k = [kx, ky, kz]
 psi_init = A * xp.einsum('i,j,k->ijk',xp.exp(1j*kx*planeWaveTest.x), 
                      xp.exp(1j*ky*planeWaveTest.y), 
@@ -75,7 +75,8 @@ psi_init = A * xp.einsum('i,j,k->ijk',xp.exp(1j*kx*planeWaveTest.x),
 psiPlot, solution = planeWaveTest.realTimeProp(psi_init, True)
 
 # Find max error for validation
-analyticAns = psi_init * np.exp(-1j*(np.linalg.norm(k)**2/2. + G0*np.abs(A)**2)*TIME)
-maxErr = xp.max(xp.abs(solution - analyticAns))
+analyticAns = cp.asnumpy(psi_init * xp.exp(-1j*(xp.linalg.norm(xp.array(k))**2/2. + G0*np.abs(A)**2)*TIME))
+maxErr = np.max(np.abs(cp.asnumpy(solution) - analyticAns))
 print(f'Max Error = {maxErr}')
+print(f'Norm Loss Ratio = {(planeWaveTest.getNorm( psiPlot[-1,:]) - planeWaveTest.getNorm( psiPlot[0,:]))/planeWaveTest.getNorm( psiPlot[0,:])}')
 

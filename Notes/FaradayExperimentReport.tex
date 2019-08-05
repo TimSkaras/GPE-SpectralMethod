@@ -61,15 +61,22 @@ It can be trivially verified that
 \end{equation}
 is a solution to (\ref{GPE3D}). It should be noted that the method will accurately solve a constant intial condition ($\psi(\textbf{x},0) = A$) only when the time step is small compared to the period of oscillation which is determined by angular frequency $\omega = g |A|^2$. In the file \href{https://github.com/TimSkaras/GPE-SpectralMethod/blob/master/Tests/homogeneous_test.py}{homogeneous\_test.py}, I solve a homogeneous initial condition with $A = \frac{1}{2}$ and $g = 10$ thus giving $T = \frac{2\pi}{\omega} = 2.51$. Our time step is $\Delta t \approx 0.0179$. For more details on parameters, see the file linked in this document.
 
-After solving the problem with these initial conditions until $t = 2.5$. When the code is run using a GPU, the maximum error at any one gridpoint is on the order of $10^{-14}$ and the norm loss ratio (the change in the norm divided by the norm at $t=0$) is also on the order of $10^{-14}$. Running the code in serial gives a max error and norm loss ratio of the same order of magnitude.
+After solving the problem with these initial conditions until $t = 2.5$. When the code is run using a GPU, the maximum error at any one gridpoint is on the order of $10^{-14}$ and the normalization loss ratio (the change in the normalization divided by the norm at $t=0$) is also on the order of $10^{-14}$. Running the code in serial gives a max error and norm loss ratio of the same order of magnitude.
 
 \subsubsection{Plane Wave}
 
 It is also possible to show that the Gross-Pitaevskii Equation admits a plane wave solution with the form
 \begin{equation}
-\psi(x,t) = 
+\psi(x,t) = Ae^{i(\vec{k} \dotproduct \vec{x} - \omega t)}, \quad A \in \mathbb{C}
 \end{equation}
+provided that $\omega$ and $\vec{k}$ satisfy the dispersion relation
+\begin{equation}
+\omega(\vec{k}) = \frac{1}{2}|\vec{k}|^2 + g \abs{A}^2
+\end{equation}
+In the file \href{https://github.com/TimSkaras/GPE-SpectralMethod/blob/master/Tests/homogeneous_test.py}{planewave\_test.py}, I use this analytic solution to again test the accuracy of my solver. I use the same value for $A$ and $g$ but with $\vec{k} = (\frac{2\pi}{L_x}, 2\frac{2\pi}{L_y},3\frac{2\pi}{L_z})$ the period is now $T = \frac{2\pi}{\omega} = 1.97$. Solving this plane wave initial condition until $t = 2.5$ gives a max error on the order of $10^{-13}$ and a norm loss ratio on the order of $10^{-14}$. Changing from GPU to serial has no significant effect on the error and loss of normalization.
 
+Because this initial condition is spatially varying, it gives us a little more information on how well the solver is working. The spatial derivative in (\ref{GPE3D}) is handled entirely separately from the potential and nonlinear terms. The TSSP method splits (\ref{GPE3D}) into two equations that each be solved exactly and then combines the splitting steps together using Strang splitting to give a second-order accurate solution. The equation with the Laplacian is solved using fourier transforms, and in the code this is handled with FFT. This test and the previous one are useful for testing these different components and isolating which part of the solver has a problem if any.
+ 
 \subsubsection{Thomas-Fermi Ground State}
 
 \section{Results}
