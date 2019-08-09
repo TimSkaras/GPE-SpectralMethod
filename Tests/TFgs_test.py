@@ -19,7 +19,7 @@ TIME_PTS = 450
 gridDim = np.array([NX, NY, NZ, TIME_PTS])
 
 # Trap length
-L = 15.0
+L = 20.0
 LX = L
 LY = L
 LZ = L
@@ -37,7 +37,7 @@ zb = za + LZ
 
 startEnd = np.array([xa, xb, ya, yb, za, zb])
 
-W = 1.
+W = 0.4
 WX = W # trapping frequency
 WY = W
 WZ = W
