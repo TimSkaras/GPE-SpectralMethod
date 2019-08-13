@@ -282,7 +282,7 @@ class Simulation:
 
         while res > tol and iterations < max_iter :
             iterations += 1
-            new_solution = solution + self.dt*(0.5*self.stencil(solution) - self.potential*solution - self.G0 * np.abs(solution)**2 * solution)
+            new_solution = solution + self.dt*(0.5*self.stencil(solution) - self.potential*solution - self.G0  * np.abs(solution)**2 * solution)
                     
             if iterations % 10 == 0:
                 new_solution = self.normalize(new_solution)

@@ -29,18 +29,61 @@ Bose-Einstein Condensation (BEC) is a state of matter in boson gases that result
 
 More recently, Professor Hulet's lab has performed experiments on the emergence of Faraday Waves in a Bose-Einstein Condensate by periodically modulating the scattering length for these atoms. In these experiments, they have modulated the scattering length periodically for a fixed period of time. Then after holding the scattering length constant, they observe that perturbations of particular wavenumbers will grow rapidly, resulting in the emergence of faraday waves.
 
-Using a mean field theory, it can be shown that the dynamics of a Bose-Einstein condensate are governed by the time-dependent Gross-Pitaevskii Equation \cite{pethick2008bose}, which in natural units is given by
+Using a mean field theory, it can be shown that the dynamics of a Bose-Einstein condensate are governed by the time-dependent Gross-Pitaevskii Equation \cite{pethick2008bose}
 \begin{equation}
-i \pdv{\psi}{t} = -\frac{1}{2}\laplacian{\psi} + V(\vb{x})\psi + g |\psi|^2 \psi
-\label{GPE3D}
+i \hbar \frac{\partial \psi(\mathbf{r}, t)}{\partial t}=-\frac{\hbar^{2}}{2 m} \nabla^{2} \psi(\mathbf{r}, t)+V(\mathbf{r}) \psi(\mathbf{r}, t)+ g|\psi(\mathbf{r}, t)|^{2} \psi(\mathbf{r}, t), \quad \quad g \equiv 4 \pi \hbar^{2} a_{s} / m
+\label{DimGPE3D}
 \end{equation}
 \nolinebreak
-where $\psi$ is a field describing the number density of atoms in real space and $g$ is a parameter corresponding to the interaction strength between atoms ($g>0$ corresponding to repulsive interactions and $g < 0$ corresponding to attractive interactions).
+where $\psi$ is a field describing the number density of atoms in real space, hence the total particle number $N$ satisfies
+\begin{equation}
+\int_{\mathbb{R}^{3}} d \mathbf{r}|\psi(\mathbf{r})|^{2} = N
+\end{equation}
+The parameter $g$ corresponds to the interaction strength between atoms ($g>0$ corresponding to repulsive interactions and $g < 0$ corresponding to attractive interactions), and is defined in terms of the scattering length $a_s$ and the atomic mass $m$.
 
 In this project, I numerically solve this nonlinear, partial differential equation assuming a cigar-shaped trapping potential in three spatial dimensions to computationally confirm recent experimental results from Professor Hulet's lab by showing that the BEC's perturbations in Fourier space grow in the expected way.
 
-\subsection{Methods}
+\section{Methods}
 
+\subsection{Dimensionless GPE}
+
+Though the form given for the Gross-Pitaevskii equation in (\ref{DimGPE3D}) is physically correct, the units in which the equation has been expressed are not appropriate for the time and length scale of our problem. To remedy this, we will first scale the field
+\begin{equation}
+\frac{\psi}{\sqrt{N}} \rightarrow \psi
+\end{equation}
+which now gives the PDE
+\begin{equation}
+i \hbar \frac{\partial \psi(\mathbf{r}, t)}{\partial t}=-\frac{\hbar^{2}}{2 m} \nabla^{2} \psi(\mathbf{r}, t)+V(\mathbf{r}) \psi(\mathbf{r}, t)+ gN|\psi(\mathbf{r}, t)|^{2} \psi(\mathbf{r}, t), \quad \quad g \equiv 4 \pi \hbar^{2} a_{s} / m
+\label{GPEUnity}
+\end{equation}
+with a normalization condition that is set to unity
+\begin{equation}
+\int_{\mathbb{R}^{3}} d \mathbf{r}|\psi(\mathbf{r})|^{2} = 1
+\end{equation}
+To make the GPE dimensionless, we stipulate that the potential is harmonic
+\begin{equation}
+V(\textbf{r}) = \frac{m}{2}\left(\omega_{x}^{2} x^{2}+\omega_{y}^{2} y^{2}+\omega_{z}^{2} z^{2}\right)
+\end{equation}
+and then choose a convenient characteristic length $a_0$ and scale our coordinates as follows
+\begin{equation}
+\omega_{x} t \rightarrow t, \quad \mathbf{r} / a_{0} \rightarrow \mathbf{r}, \quad a_{0}^{3 / 2} \psi \rightarrow \psi \quad \text { where } \quad a_{0} \equiv \sqrt{\frac{\hbar }{ m \omega_{x}}}
+\label{scaling}
+\end{equation}
+Plugging (\ref{scaling}) into (\ref{GPEUnity}) and simplifying we find the GPE in dimensionless form can be written as
+\begin{equation}
+i \frac{\partial \psi(\mathbf{r}, t)}{\partial t}= -\frac{1}{2 } \nabla^{2} \psi(\mathbf{r}, t)+V(\mathbf{r}) \psi(\mathbf{r}, t)+ gN|\psi(\mathbf{r}, t)|^{2} \psi(\mathbf{r}, t), \quad \quad g \equiv 4 \pi a_{s}
+\label{GPE3D}
+\end{equation}
+where the potential has been scaled so that one of the trapping frequencies is unity
+\begin{equation*}
+V(\textbf{r}) = \frac{1}{2}\left( x^{2}+\gamma_{y}^{2} y^{2}+\gamma_{z}^{2} z^{2}\right), \quad \gamma_y \equiv \frac{\omega_y}{\omega_x}, \quad \gamma_z \equiv \frac{\omega_z}{\omega_x}
+\end{equation*}
+For the Faraday Wave experiment that we will be considering, the trapping potential is cylindrically symmetric with $j\omega_x = \omega_y$, so the trapping potential is really
+\begin{equation}
+V(\textbf{r}) = \frac{1}{2}\left( \rho^{2}+\gamma_{z}^{2} z^{2}\right), \quad \rho^2 = x^2 + y^2
+\end{equation}
+
+\subsection{Numerical Methods}
 To solve this nonlinear PDE, I use a time-splitting spectral (TSSP) method while assuming periodic boundary conditions. The general idea behind applying this method is that some operators on the RHS of (\ref{GPE3D}) are easy to apply in momentum space (e.g., the second order derivative) and some are easy to apply in position space (e.g., the potential term). To exploit this fact, this method involves shifting the wave function solution between its real space and momentum space representation via fourier transformation and applying each operator component in the space it is most easily applied. 
 
 Before I can start solving the nonlinear PDE, however, I must find the correct initial condition. These experiments in Hulet's lab are performed on BEC that is very close to its ground state. The ground state for the GPE is not known analytically in this trapping potential, so I will use finite difference methods to implement the imaginary-time propagation method \cite{chiofalo2000ground, muruganandam2009fortran}, which will allow me to numerically calculate the ground state.
@@ -67,11 +110,11 @@ After solving the problem with these initial conditions until $t = 2.5$. When th
 
 It is also possible to show that the Gross-Pitaevskii Equation admits a plane wave solution with the form
 \begin{equation}
-\psi(x,t) = Ae^{i(\vec{k} \dotproduct \vec{x} - \omega t)}, \quad A \in \mathbb{C}
+\psi(\textbf{r},t) = Ae^{i(\textbf{k} \dotproduct \textbf{r} - \omega t)}, \quad A \in \mathbb{C}
 \end{equation}
 provided that $\omega$ and $\vec{k}$ satisfy the dispersion relation
 \begin{equation}
-\omega(\vec{k}) = \frac{1}{2}|\vec{k}|^2 + g \abs{A}^2
+\omega(\textbf{k}) = \frac{1}{2}|\textbf{k}|^2 + g \abs{A}^2
 \end{equation}
 In the file \href{https://github.com/TimSkaras/GPE-SpectralMethod/blob/master/Tests/homogeneous_test.py}{planewave\_test.py}, I use this analytic solution to again test the accuracy of my solver. I use the same value for $A$ and $g$ but with $\vec{k} = (\frac{2\pi}{L_x}, 2\frac{2\pi}{L_y},3\frac{2\pi}{L_z})$ the period is now $T = \frac{2\pi}{\omega} = 1.97$. Solving this plane wave initial condition until $t = 2.5$ gives a max error on the order of $10^{-13}$ and a norm loss ratio on the order of $10^{-14}$. Changing from GPU to serial has no significant effect on the error and loss of normalization.
 
@@ -83,22 +126,22 @@ The previous two test cases are meant to ensure that the code is correctly solvi
 
 As explained in the references just cited, a stationary solution $\phi(\textbf{x})$ of the GPE can be written as
 \begin{equation}
-\psi(\textbf{x},t)  = e^{-i\mu t}\phi(\textbf{x})
+\psi(\textbf{r},t)  = e^{-i\mu t}\phi(\textbf{r})
 \label{stationary}
 \end{equation}
 where $\mu$ is the chemical potential. Plugging (\ref{stationary}) into (\ref{GPE3D}) gives us the equation $\phi(\textbf{x})$ must satisfy to be a stationary solution
 \begin{equation}
-\mu \phi(\mathbf{x})=-\frac{1}{2} \nabla^{2} \phi(\mathbf{x})+V(\mathbf{x}) \phi(\mathbf{x})+ g|\phi(\mathbf{x})|^{2} \phi(\mathbf{x})
+\mu \phi(\mathbf{r})=-\frac{1}{2} \nabla^{2} \phi(\mathbf{r})+V(\mathbf{r}) \phi(\mathbf{r})+ g|\phi(\mathbf{r})|^{2} \phi(\mathbf{r})
 \label{StationaryGPE}
 \end{equation}
 with the normalization condition
 \begin{equation}
-\int_{\mathbb{R}^{3}}|\phi(\mathbf{x})|^{2} d \mathbf{x}=1.
+\int_{\mathbb{R}^{3}}|\phi(\mathbf{r})|^{2} d \mathbf{r}=1.
 \label{NormCondition}
 \end{equation}
 The ground state is the stationary solution satsifying (\ref{StationaryGPE}) and (\ref{NormCondition}) while also minimizing the energy functional
 \begin{equation}
-E[\phi] := \int_{\mathbb{R}^{3}} \left[ \frac1{2} |\nabla \phi|^{2}  + V(\textbf{x})|\phi|^{2} + \frac{g}{2}|\phi|^{4} \right] d \mathbf{x}
+E[\phi] := \int_{\mathbb{R}^{3}} \left[ \frac1{2} |\nabla \phi|^{2}  + V(\textbf{r})|\phi|^{2} + \frac{g}{2}|\phi|^{4} \right] d \mathbf{r}
 \end{equation}
 This ground state solution is unique if we also require that $\phi$ be real.
 

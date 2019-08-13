@@ -14,12 +14,12 @@ N = 64
 NX = N
 NY = N
 NZ = N
-TIME_PTS = 450
+TIME_PTS = 850
 
 gridDim = np.array([NX, NY, NZ, TIME_PTS])
 
 # Trap length
-L = 20.0
+L = 15.0
 LX = L
 LY = L
 LZ = L
@@ -37,7 +37,7 @@ zb = za + LZ
 
 startEnd = np.array([xa, xb, ya, yb, za, zb])
 
-W = 0.4
+W = 1.
 WX = W # trapping frequency
 WY = W
 WZ = W
@@ -47,7 +47,7 @@ trapVars = np.array([WX, WY, WZ])
 OMEGA = 2.0
 EPS = 0.0
 MOD_TIME = 5*np.pi
-G0 = 1070.
+G0 = 2000.
 
 gVars = np.array([OMEGA, EPS, MOD_TIME, G0])
 
@@ -61,10 +61,9 @@ if GPU:
 else:
     xp = np
     
-sigma = 1.0
-sigmaz = xp.sqrt(1/WZ)
+sigma = xp.sqrt(1/W)
 psi_init = 1/xp.sqrt(2*xp.pi) * xp.einsum('i,j,k->ijk', xp.exp(-simulationTest.x**2/(2*sigma**2)), \
-                     xp.exp(-simulationTest.y**2/(2*sigma**2)), xp.exp(-simulationTest.z**2/(2*sigmaz**2))/sigmaz)
+                     xp.exp(-simulationTest.y**2/(2*sigma**2)), xp.exp(-simulationTest.z**2/(2*sigma**2))/sigma)
 tol = 10**-15
 
 begin = timeit.default_timer()
@@ -75,14 +74,15 @@ print(f'Numerically Calculated Energy = {simulationTest.getEnergy(solution)}')
 print(f'Numerical Solution Norm = {np.sum(np.abs(cp.asnumpy(solution))**2) *dV}')
 
 # Calculate analytic with TF ground state solution
-mu = 0.5 * (15./4 * G0 * W**3/np.pi)**(2./5)
+mu = 0.5 * (15./4 * G0 * W**3/np.pi)**(2./5) 
 TFgs = (mu - cp.asnumpy(simulationTest.potential))/G0
 idxZero = np.where(TFgs < 0)
 TFgs[idxZero] = 0.0
 TFgs = np.sqrt(TFgs)
-print(f'Analytic Answer Energy = {simulationTest.getEnergy(xp.asarray(TFgs))}')
+TFgs = TFgs/np.sqrt(np.sum(TFgs**2) *dV)
+print(f'Analytic Answer Energy = {simulationTest.getEnergy(xp.asarray(TFgs ))}')
 #print(f'norm = {np.sum(TFgs**2) *dV}')
-
+print(f'Max Error = {np.max(np.abs(TFgs - cp.asnumpy(solution)))}')
 
 y_np = simulationTest.hy*np.arange(NY) + ya
 z_np = simulationTest.hz*np.arange(NZ) + za
