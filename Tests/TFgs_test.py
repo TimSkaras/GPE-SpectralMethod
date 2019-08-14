@@ -74,14 +74,14 @@ print(f'Numerically Calculated Energy = {simulationTest.getEnergy(solution)}')
 print(f'Numerical Solution Norm = {np.sum(np.abs(cp.asnumpy(solution))**2) *dV}')
 
 # Calculate analytic with TF ground state solution
-mu = 0.5 * (15./4 * G0 * W**3/np.pi)**(2./5) 
+mu = 0.5 * (15./4 * G0 * WY * WZ/WX**2/np.pi)**(2./5) 
 TFgs = (mu - cp.asnumpy(simulationTest.potential))/G0
 idxZero = np.where(TFgs < 0)
 TFgs[idxZero] = 0.0
 TFgs = np.sqrt(TFgs)
 TFgs = TFgs/np.sqrt(np.sum(TFgs**2) *dV)
 print(f'Analytic Answer Energy = {simulationTest.getEnergy(xp.asarray(TFgs ))}')
-#print(f'norm = {np.sum(TFgs**2) *dV}')
+print(f'norm = {np.sum(TFgs**2) *dV}')
 print(f'Max Error = {np.max(np.abs(TFgs - cp.asnumpy(solution)))}')
 
 y_np = simulationTest.hy*np.arange(NY) + ya
@@ -95,7 +95,7 @@ ax = fig.gca(projection='3d')
 ax.plot_wireframe(zz, yy, np.sum(np.abs(cp.asnumpy(solution))**2, axis=(0))*simulationTest.hx)
 ax.set_xlabel('Z-Axis')
 ax.set_ylabel('Y-Axis')
-ax.set_zlabel('Amplitude')
+ax.set_zlabel(r'$|\psi|^2$')
 ax.set_title('Numerical Solution')
 
 
@@ -105,5 +105,5 @@ ax = fig.gca(projection='3d')
 ax.plot_wireframe(zz, yy, np.sum(np.abs(cp.asnumpy(TFgs))**2, axis=(0))*simulationTest.hx)
 ax.set_xlabel('Z-Axis')
 ax.set_ylabel('Y-Axis')
-ax.set_zlabel('Amplitude')
-ax.set_title('Analytic Solution')
+ax.set_zlabel(r'$|\psi|^2$')
+ax.set_title('Analytic Approximation')

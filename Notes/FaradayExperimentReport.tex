@@ -1,7 +1,7 @@
 \documentclass[12]{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{graphicx, float,amsmath, physics, amssymb}
-\usepackage{physics,hyperref}
+\usepackage{physics,hyperref,subcaption}
 \hypersetup{
     colorlinks=true,
     linkcolor=black,
@@ -142,15 +142,37 @@ with the normalization condition
 The ground state is the stationary solution satsifying (\ref{StationaryGPE}) and (\ref{NormCondition}) while also minimizing the energy functional
 \begin{equation}
 E[\phi] := \int_{\mathbb{R}^{3}} \left[ \frac1{2} |\nabla \phi|^{2}  + V(\textbf{r})|\phi|^{2} + \frac{g}{2}|\phi|^{4} \right] d \mathbf{r}
+\label{Energy}
 \end{equation}
-This ground state solution is unique if we also require that $\phi$ be real.
+This ground state solution is unique if we also require that $\phi$ be real. In the strongly-interacting regime where $g N \gg a_{0}$ and $g > 0$, the ground state can be approximated as 
+\begin{equation}
+\mu_{g}=\frac{1}{2}\left(\frac{15 gN \gamma_y\gamma_{z}}{4 \pi}\right)^{2 / 5}, \phi_{g}(\mathbf{x})=\left\{\begin{array}{ll}{\sqrt{\frac{\mu_{g}-V(\mathbf{x}) }{gN}},} & {V(\mathbf{x})<\mu_{g}} \\ {0,} & {\text { otherwise }}\end{array}\right.
+\label{StrongGS}
+\end{equation}
+This approximate ground state is known as the Thomas-Fermi ground state. It can be derived from the Thomas-Fermi approximtion where the kinetic term in (\ref{GPE3D}) is dropped from the equation.
 
-% Explain singularly perturbed
-% Rewrite GPE with constants not set to 1
-% Obtain different equation from setting characteristic length differently
-% Display strongly-interacting approximate ground state
-% Give numerical results
+In the file \href{https://github.com/TimSkaras/GPE-SpectralMethod/blob/master/Tests/TFgs_test.py}{TFgs\_test.py}, I have used my implementation of the imaginary-time propagation method to find the ground state in a trap with $\omega_x = \omega_y = \omega_z = 1$ and $gN = 2000$. On a grid of points $64 \times 64 \times 64$ points, I have compared my numerically calculated ground state with the analytic approximation given in (\ref{StrongGS}), and I have provided a plot of each in figure \ref{fig:TFgs}. 
 
+\begin{figure}[H]
+    \begin{subfigure}[t]{0.5\textwidth}
+        \includegraphics[scale=0.35]{Plots/TFgsNumerical}
+        \caption{}
+    \end{subfigure}\hfill
+    \begin{subfigure}[t]{0.45\textwidth}
+        \includegraphics[scale=0.35]{Plots/TFgsAnalytic}
+        \caption{}
+    \end{subfigure}
+    \caption{These are plots of $|\psi|^2$ for the numerically calculated solution (a) and the analytic approximation (b). The x-dimension has been integrated out to make plotting possible. The two are very similar execpt at the boundary where the analytic aproximation becomes zero.}
+    \label{fig:TFgs}
+\end{figure}
+
+To compare how close the numerical solution is the analytic approximation, I used equation (\ref{Energy}) to calculate the ground state energy for each. The numerical solution has an energy of 8.28 and the analytic approximation has an energy of 8.37, and the max error between the wavefunction for each was 0.010. 
+
+These figures are not as promising as the tests for the GPE solver were, but there may be good reason for this. Bao et al. \cite{bao2003ground} write that the energy of the Thomas-Fermi ground state is actually infinite, namely
+\begin{equation}
+E[\phi_g] = +\infty
+\end{equation}
+due to the low regularity of $\phi_g$ at the free boundary where $V(x) = \mu_g$. To remedy this issue, an interface layer has to be constructed at this boundary to improve the accuracy of the approximation.
 
 \section{Results}
 
