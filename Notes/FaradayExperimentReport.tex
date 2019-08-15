@@ -1,6 +1,6 @@
 \documentclass[12]{article}
 \usepackage[margin=1in]{geometry}
-\usepackage{graphicx, float,amsmath, physics, amssymb}
+\usepackage{graphicx, float,amsmath, physics, amssymb, mathtools}
 \usepackage{physics,hyperref,subcaption}
 \hypersetup{
     colorlinks=true,
@@ -46,6 +46,7 @@ In this project, I numerically solve this nonlinear, partial differential equati
 \section{Methods}
 
 \subsection{Dimensionless GPE}
+\label{sec:DimGPE}
 
 Though the form given for the Gross-Pitaevskii equation in (\ref{DimGPE3D}) is physically correct, the units in which the equation has been expressed are not appropriate for the time and length scale of our problem. To remedy this, we will first scale the field
 \begin{equation}
@@ -78,10 +79,11 @@ where the potential has been scaled so that one of the trapping frequencies is u
 \begin{equation*}
 V(\textbf{r}) = \frac{1}{2}\left( x^{2}+\gamma_{y}^{2} y^{2}+\gamma_{z}^{2} z^{2}\right), \quad \gamma_y \equiv \frac{\omega_y}{\omega_x}, \quad \gamma_z \equiv \frac{\omega_z}{\omega_x}
 \end{equation*}
-For the Faraday Wave experiment that we will be considering, the trapping potential is cylindrically symmetric with $j\omega_x = \omega_y$, so the trapping potential is really
+For the Faraday Wave experiment that we will be considering, the trapping potential is cylindrically symmetric with $\omega_x = \omega_y$. We thus define $\omega_\rho$ as the trapping frequency along the x-axis and y-axis (henceforth called the radial direction), thus $\omega_\rho = \omega_x = \omega_y$. So the trapping potential is really
 \begin{equation}
-V(\textbf{r}) = \frac{1}{2}\left( \rho^{2}+\gamma_{z}^{2} z^{2}\right), \quad \rho^2 = x^2 + y^2
+V(\textbf{r}) = \frac{1}{2}\left( \rho^{2}+\gamma_{z}^{2} z^{2}\right), \quad \rho^2 = x^2 + y^2, \quad \gamma_z \equiv \frac{\omega_z}{\omega_\rho}.
 \end{equation}
+
 
 \subsection{Numerical Methods}
 To solve this nonlinear PDE, I use a time-splitting spectral (TSSP) method while assuming periodic boundary conditions. The general idea behind applying this method is that some operators on the RHS of (\ref{GPE3D}) are easy to apply in momentum space (e.g., the second order derivative) and some are easy to apply in position space (e.g., the potential term). To exploit this fact, this method involves shifting the wave function solution between its real space and momentum space representation via fourier transformation and applying each operator component in the space it is most easily applied. 
@@ -155,7 +157,7 @@ In the file \href{https://github.com/TimSkaras/GPE-SpectralMethod/blob/master/Te
 
 \begin{figure}[H]
     \begin{subfigure}[t]{0.5\textwidth}
-        \includegraphics[scale=0.35]{Plots/TFgsNumerical}
+        \includegraphics[scale=0.36]{Plots/TFgsNumerical}
         \caption{}
     \end{subfigure}\hfill
     \begin{subfigure}[t]{0.45\textwidth}
@@ -166,17 +168,38 @@ In the file \href{https://github.com/TimSkaras/GPE-SpectralMethod/blob/master/Te
     \label{fig:TFgs}
 \end{figure}
 
-To compare how close the numerical solution is the analytic approximation, I used equation (\ref{Energy}) to calculate the ground state energy for each. The numerical solution has an energy of 8.28 and the analytic approximation has an energy of 8.37, and the max error between the wavefunction for each was 0.010. 
+To compare how close the numerical solution is the analytic approximation, I used equation (\ref{Energy}) to calculate the ground state energy for each. The numerical solution has an energy of 8.28 and the analytic approximation has an energy of 8.37. The max error between the wavefunction for each was 0.010. 
 
-These figures are not as promising as the tests for the GPE solver were, but there may be good reason for this. Bao et al. \cite{bao2003ground} write that the energy of the Thomas-Fermi ground state is actually infinite, namely
+These figures are not as promising as the tests for the GPE solver were, but there may be good reason for this. The energy of the Thomas-Fermi ground state is actually infinite, namely
 \begin{equation}
 E[\phi_g] = +\infty
 \end{equation}
-due to the low regularity of $\phi_g$ at the free boundary where $V(x) = \mu_g$. To remedy this issue, an interface layer has to be constructed at this boundary to improve the accuracy of the approximation.
+due to the low regularity of $\phi_g$ at the free boundary where $V(x) = \mu_g$. To remedy this issue, an interface layer has to be constructed at this boundary to improve the accuracy of the approximation \cite{bao2003ground}.
 
 \section{Results}
 
-\subsection{Experiment Description}
+\subsection{Experimental Setup}
+
+In the experiment, the lithium BEC is confined in a cylindrically symmetric harmonic trap. Let $\omega_\rho$ be the trapping frequency in the radial direction and $\omega_z$ the trapping frequency in the axial direction (i.e., along the z-axis). The experimental parameters are 
+\begin{equation}
+\left(\frac{\omega_{\rho}}{2 \pi}, \frac{\omega_{z}}{2 \pi}\right)=(476 \,\mathrm{Hz},7 \,\mathrm{Hz}) , \quad a_{0}=1.74 \mu \mathrm{m}, \quad N \approx 7 \times 10^{5}, \quad a_s \approx 4r_{\text{Bohr}}
+\end{equation}
+Because $\omega_\rho \gg \omega_z$, the BEC in its ground state is highly elongated along the axial direction. In the experiment, the scattering length is modulated periodically such that
+\begin{equation}
+  g(t) =
+  \begin{cases}
+		g_0(1 + \epsilon \sin(\omega t)) & \text{if $0\leq t \leq t_{mod}$} \\
+		g_0 & \text{else}
+  \end{cases}
+\end{equation}
+where $g_0$ is the value for $g = 4\pi a_s$ before the experiment begins, $t_{mod}$ is the length of time over which the scattering length is modulated, and $\epsilon = 0.2$. The modulation frequency of the scattering length $\omega$ varies depending on the epxeriment being performed. 
+
+When the scattering length is modulated in this way, the BEC expands and contracts within the trapping potential, and continues to do so after the scattering length is kept fixed. This expansion and contraction sets up a persistent modulation of the width which in turn drives the growth of periodic spatial perturbations along the axial direction of the BEC. The rate of growth for these spatial perturbations is dependent on the perturbation's wavenumber, and the timescale on which this dominant growing mode will emerge is dependent on the scattering length modulation frequency $\omega$ \cite{mustafa}.
+
+In order to reconstruct the experiment in numerical simulation, these parameters must be converted to dimensionless form as described in section \ref{sec:DimGPE}. Doing so we obtain
+\begin{equation}
+\left(\omega_\rho, \omega_z\right)=(1 , \textstyle\frac{7}{476}), \quad g \approx 0.001528, \quad gN \approx 1070, \quad t_{mod} \approx 5\pi.
+\end{equation}
 
 \subsection{Analytic Prediction}
 
