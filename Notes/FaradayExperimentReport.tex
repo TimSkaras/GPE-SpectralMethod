@@ -9,6 +9,7 @@
     urlcolor=blue,
     citecolor=black,
 }
+\renewcommand{\baselinestretch}{1.2}
 
 \begin{document}
 \begin{flushright}
@@ -155,7 +156,7 @@ This approximate ground state is known as the Thomas-Fermi ground state. It can 
 
 In the file \href{https://github.com/TimSkaras/GPE-SpectralMethod/blob/master/Tests/TFgs_test.py}{TFgs\_test.py}, I have used my implementation of the imaginary-time propagation method to find the ground state in a trap with $\omega_x = \omega_y = \omega_z = 1$ and $gN = 2000$. On a grid of points $64 \times 64 \times 64$ points, I have compared my numerically calculated ground state with the analytic approximation given in (\ref{StrongGS}), and I have provided a plot of each in figure \ref{fig:TFgs}. 
 
-\begin{figure}[H]
+\begin{figure}[h]
     \begin{subfigure}[t]{0.5\textwidth}
         \includegraphics[scale=0.36]{Plots/TFgsNumerical}
         \caption{}
@@ -182,7 +183,7 @@ due to the low regularity of $\phi_g$ at the free boundary where $V(x) = \mu_g$.
 
 In the experiment, the lithium BEC is confined in a cylindrically symmetric harmonic trap. Let $\omega_\rho$ be the trapping frequency in the radial direction and $\omega_z$ the trapping frequency in the axial direction (i.e., along the z-axis). The experimental parameters are 
 \begin{equation}
-\left(\frac{\omega_{\rho}}{2 \pi}, \frac{\omega_{z}}{2 \pi}\right)=(476 \,\mathrm{Hz},7 \,\mathrm{Hz}) , \quad a_{0}=1.74 \mu \mathrm{m}, \quad N \approx 7 \times 10^{5}, \quad a_s \approx 4r_{\text{Bohr}}
+\left(\frac{\omega_{\rho}}{2 \pi}, \frac{\omega_{z}}{2 \pi}\right)=(476 \,\mathrm{Hz},7 \,\mathrm{Hz}) , \quad a_{0}=1.74 \mu \mathrm{m}, \quad N \approx 7 \times 10^{5}, \quad a_s \approx 4r_{\text{Bohr}}, \quad t_{mod} = 5~\textrm{ms}
 \end{equation}
 Because $\omega_\rho \gg \omega_z$, the BEC in its ground state is highly elongated along the axial direction. In the experiment, the scattering length is modulated periodically such that
 \begin{equation}
@@ -192,18 +193,22 @@ Because $\omega_\rho \gg \omega_z$, the BEC in its ground state is highly elonga
 		g_0 & \text{else}
   \end{cases}
 \end{equation}
-where $g_0$ is the value for $g = 4\pi a_s$ before the experiment begins, $t_{mod}$ is the length of time over which the scattering length is modulated, and $\epsilon = 0.2$. The modulation frequency of the scattering length $\omega$ varies depending on the epxeriment being performed. 
+where $g_0$ is the value for $g = 4\pi a_s$ before the experiment begins, $t_{mod}$ is the length of time over which the scattering length is modulated, and $\epsilon = 0.1$. The modulation frequency of the scattering length $\omega$ varies depending on the epxeriment being performed. 
 
-When the scattering length is modulated in this way, the BEC expands and contracts within the trapping potential, and continues to do so after the scattering length is kept fixed. This expansion and contraction sets up a persistent modulation of the width which in turn drives the growth of periodic spatial perturbations along the axial direction of the BEC. The rate of growth for these spatial perturbations is dependent on the perturbation's wavenumber, and the timescale on which this dominant growing mode will emerge is dependent on the scattering length modulation frequency $\omega$ \cite{mustafa}.
+When the scattering length is modulated in this way, the BEC expands and contracts within the trapping potential, and continues to do so after the scattering length is kept fixed. This expansion and contraction sets up a persistent modulation of the width which in turn drives the growth of periodic spatial perturbations along the axial direction of the BEC. The rate of growth for these spatial perturbations is dependent on the perturbation's wavenumber. There is one mode in particular that will grow faster than all other modes which we call $k_{max}$, and the timescale on which this dominant growing mode will emerge is dependent on the scattering length modulation frequency $\omega$ \cite{mustafa}.
 
 In order to reconstruct the experiment in numerical simulation, these parameters must be converted to dimensionless form as described in section \ref{sec:DimGPE}. Doing so we obtain
 \begin{equation}
-\left(\omega_\rho, \omega_z\right)=(1 , \textstyle\frac{7}{476}), \quad g \approx 0.001528, \quad gN \approx 1070, \quad t_{mod} \approx 5\pi.
+\left(\omega_\rho, \omega_z\right)=(1 , \textstyle\frac{7}{476}), \quad g \approx 0.001528, \quad gN \approx 1070, \quad t_{mod} = 14.952 \approx 5\pi.
 \end{equation}
 
-\subsection{Analytic Prediction}
-
 \subsection{Computational Results}
+
+Now, we analyze computational results that can be directly compared with experiment. Due to limitations on instrument precision in the laboratory, certain properties of the BEC cannot be measured. The results that can be compared with experimental measurement include: (1) how the time it takes for the the dominant mode to reach its maximum amplitude varies with the scattering length modulation frequency $\omega$ and (2) how the wavenumber of the dominant mode varies with $\omega$.
+
+First, we will find the ground state for the trapping potential and experimental parameters described above and then evolve the system forward in time. After a long enough time has elapsed, the small spatial perturbations along the axial direction will grow until a dominant mode emerges. We will use fourier transformation to analyze the growth and amplitude of each mode for the spatial perturbations. 
+
+There are two ways that we can define the ``dominant mode": the mode that reaches the maximum amplitude first and the mode that has the largest amplitude as the spatial perturbations leave the domain of validity. The analytic predictions for predicting what mode has the fastest growth rate \cite{mustafa} assume that the amplitude of each mode is small. This simplifies the analysis because it also means that the each of the spatial perturbation modes will grow independently of each other and not be coupled. When the amplitude of one or more mores has grown sufficiently large, this assumption no longer holds and the analytic predictions are cannot reliably predict behavior. The ``domain of validity" is the time frame in which this assumption of uncoupled modes still holds
 
 \bibliographystyle{abbrv}
 \bibliography{FaradayExperimentBib}

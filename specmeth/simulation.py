@@ -367,12 +367,12 @@ class Simulation:
         def animate(i):
             y = psiPlot[i,:]
             line.set_data(cp.asnumpy(self.z), y)
-            time_text.set_text(f'time = {self.dt * i:3.3f}')
+            time_text.set_text(f'time = {self.TIME/len(psiPlot) * i:3.3f}')
             return line, time_text
         
         # call the animator.  blit=True means only re-draw the parts that have changed.
         anim = animation.FuncAnimation(fig, animate, init_func=init,
-                                       frames=int(self.TIME_PTS), interval=60.0, blit=True)
+                                       frames=int(len(psiPlot)), interval=60.0, blit=True)
         
         # save the animation as an mp4.  This requires ffmpeg or mencoder to be
         # installed.  The extra_args ensure that the x264 codec is used, so that
@@ -383,13 +383,33 @@ class Simulation:
         # This will save the animation to file animation.mp4 by default
         
         if savePath:
-            anim.save(savePath, fps=150, dpi=150)
+            anim.save(savePath, fps=120, dpi=150)
     
-    
-    
-    
-    
-    
+    # -------------------------- Mode Analysis --------------------------------
+
+    def tkmax(self, psiPlot):
+        """
+        This function will take psiPlot output from realTimePropagation and then
+        find the mode that has the max amplitude and the time at which it reaches
+        that maximum
+        
+        OUTPUT:
+            tmax -- time for dominant mode to reach maximum
+            kmax -- wavenumber that attains maximum
+        """
+         
+        start_idx = 20
+        kPlot = np.fft.fft(psiPlot)
+        kPlot = kPlot[:, start_idx:self.NZ//2]
+        k = np.array([np.float(j) for j in 2*np.pi*self.NZ/self.LZ* np.arange(start_idx,self.NZ//2)/self.NZ])
+        t = np.arange(self.TIME_PTS+1)*self.dt
+        kk,tt = np.meshgrid(k, t)
+        
+        idxMax = np.unravel_index(np.argmax(kPlot), kPlot.shape)
+        kmax = k[idxMax[1]]
+        tmax = t[idxMax[0]]
+        
+        return kmax, tmax
     
     
     
