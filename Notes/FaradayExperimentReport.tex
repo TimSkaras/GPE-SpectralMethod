@@ -197,12 +197,21 @@ Because $\omega_\rho \gg \omega_z$, the BEC in its ground state is highly elonga
 \end{equation}
 where $g_0$ is the value for $g = 4\pi a_s$ before the experiment begins, $t_{mod}$ is the length of time over which the scattering length is modulated, and $\epsilon = 0.2$. The modulation frequency of the scattering length $\omega$ varies depending on the epxeriment being performed. 
 
-When the scattering length is modulated in this way, the BEC expands and contracts within the trapping potential, and continues to do so after the scattering length is kept fixed. This expansion and contraction sets up a persistent modulation of the width which in turn drives the growth of periodic spatial perturbations along the axial direction of the BEC. The rate of growth for these spatial perturbations is dependent on the perturbation's wavenumber. There is one mode in particular that will grow faster than all other modes which we call $k_{max}$, and the timescale on which this dominant growing mode will emerge is dependent on the scattering length modulation frequency $\omega$ \cite{mustafa}.
+When the scattering length is modulated in this way, the BEC expands and contracts within the trapping potential, and continues to do so after the scattering length is kept fixed. This expansion and contraction sets up a persistent modulation of the width which in turn drives the growth of periodic spatial perturbations along the axial direction of the BEC. The rate of growth for these spatial perturbations is dependent on the perturbation's wavenumber. There is one mode in particular that will grow faster than all other modes which we call $k_{max}$, and the timescale on which this dominant growing mode will emerge is dependent on the scattering length modulation frequency $\omega$ \cite{mustafa}. 
 
 In order to reconstruct the experiment in numerical simulation, these parameters must be converted to dimensionless form as described in section \ref{sec:DimGPE}. Doing so we obtain
 \begin{equation}
 \left(\omega_\rho, \omega_z\right)=(1 , \textstyle\frac{7}{476}), \quad g \approx 0.001528, \quad gN \approx 1070, \quad t_{mod} = 14.952 \approx 5\pi.
 \end{equation}
+
+We have computationally simulated a condensate with these conditions where $\omega = 2\omega_\rho$, and an animation of its time evolution can be viewed \href{}{here}. With this simulation, we have can test how well energy is conserved by the numercal method. Unfortunately, the time-splitting spectral method is not guaranteed to conserve energy, so checking that the energy is conserved can be a indicator that the time-step is not too large. Figure \ref{fig:energy} plots how the energy of the condensate changes with time. As we expect, the energy is increasing before $t_{mod}$ as a result of the changing scattering length. After $t_{mod}$ the scattering length is held constant and the energy remains relativly constant as well.
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{energyPlot}
+\caption{Energy of condensate over time}
+\label{fig:energy}
+\end{figure}
 
 \subsection{Computational Results}
 

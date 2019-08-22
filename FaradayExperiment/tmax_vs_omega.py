@@ -66,7 +66,7 @@ omega_list = [1.8, 1.85, 1.9, 1.95, 2.0, 2.05, 2.1, 2.15, 2.2]
 kmax_list = np.array([])
 tmax_list = np.array([])
 
-for omega in omega_list:
+for omega in [2.0]:
 
     OMEGA = omega
     EPS = 0.2
@@ -86,39 +86,39 @@ for omega in omega_list:
     start_idx = 20
 
 
-fig = plt.figure()
-ax = plt.axes(xlim=(1.8,2.2), ylim=(0, 1.5))
-ax.plot(omega_list, kmax_list)
-ax.plot(omega_list, 1.1*np.ones(len(omega_list)))
-ax.set_xlabel(r'$\omega/\omega_\rho$')
-ax.set_ylabel(r'$k_{max}$')
-ax.set_title('Dominant Mode vs. Scattering Length Modulation Frequency')
-ax.legend(['Numerical', 'Analytic'])
-ax.grid()
-
-fig, ax = plt.subplots()
-ax.plot(omega_list, tmax_list)
-ax.set_xlabel(r'$\omega/\omega_\rho$')
-ax.set_ylabel(r'$t_{max}$')
-ax.set_title('Time to Max Amplitude vs. Scattering Length Modulation Frequency')
-ax.grid()
-
-fig = plt.figure()
-ax = plt.axes(xlim=(1.8,2.2), ylim=(0, 1.))
-ax.plot(omega_list, kmax_list /1.74)
-ax.plot(omega_list, 1.1*np.ones(len(omega_list))/1.74)
-ax.set_xlabel(r'$\omega/\omega_\rho$')
-ax.set_ylabel(r'$k_{max}$ $(\mu$m$^{-1})$')
-ax.set_title('Dominant Mode vs. Scattering Length Modulation Frequency')
-ax.legend(['Numerical', 'Analytic'])
-ax.grid()
-
-fig, ax = plt.subplots()
-ax.plot(omega_list, tmax_list * 0.334)
-ax.set_xlabel(r'$\omega/\omega_\rho$')
-ax.set_ylabel(r'$t_{max}$ (ms)')
-ax.set_title('Time to Max Amplitude vs. Scattering Length Modulation Frequency')
-ax.grid()
+#fig = plt.figure()
+#ax = plt.axes(xlim=(1.8,2.2), ylim=(0, 1.5))
+#ax.plot(omega_list, kmax_list)
+#ax.plot(omega_list, 1.1*np.ones(len(omega_list)))
+#ax.set_xlabel(r'$\omega/\omega_\rho$')
+#ax.set_ylabel(r'$k_{max}$')
+#ax.set_title('Dominant Mode vs. Scattering Length Modulation Frequency')
+#ax.legend(['Numerical', 'Analytic'])
+#ax.grid()
+#
+#fig, ax = plt.subplots()
+#ax.plot(omega_list, tmax_list)
+#ax.set_xlabel(r'$\omega/\omega_\rho$')
+#ax.set_ylabel(r'$t_{max}$')
+#ax.set_title('Time to Max Amplitude vs. Scattering Length Modulation Frequency')
+#ax.grid()
+#
+#fig = plt.figure()
+#ax = plt.axes(xlim=(1.8,2.2), ylim=(0, 1.))
+#ax.plot(omega_list, kmax_list /1.74)
+#ax.plot(omega_list, 1.1*np.ones(len(omega_list))/1.74)
+#ax.set_xlabel(r'$\omega/\omega_\rho$')
+#ax.set_ylabel(r'$k_{max}$ $(\mu$m$^{-1})$')
+#ax.set_title('Dominant Mode vs. Scattering Length Modulation Frequency')
+#ax.legend(['Numerical', 'Analytic'])
+#ax.grid()
+#
+#fig, ax = plt.subplots()
+#ax.plot(omega_list, tmax_list * 0.334)
+#ax.set_xlabel(r'$\omega/\omega_\rho$')
+#ax.set_ylabel(r'$t_{max}$ (ms)')
+#ax.set_title('Time to Max Amplitude vs. Scattering Length Modulation Frequency')
+#ax.grid()
 
 #dV = faradayTest.hx*faradayTest.hy*faradayTest.hz
 #normInit = np.sum(np.abs(psi_init)**2)*dV
@@ -129,14 +129,14 @@ ax.grid()
 
 savePath = '../Animations/animation.mp4'
 
-#faradayTest.animateSol(psiPlot[::3,:], savePath)
+faradayTest.animateSol(psiPlot[::3,:], savePath)
 
-#fig, ax = plt.subplots()
-#t = np.arange(len(energyPlot)) * faradayTest.dt
-#ax.plot(t, energyPlot)
-#ax.set_title('Energy vs. Time')
-#ax.set_xlabel('Time')
-#ax.set_ylabel('Energy')
+fig, ax = plt.subplots()
+t = np.arange(len(energyPlot)) * faradayTest.dt
+ax.plot(t, energyPlot)
+ax.set_title('Energy vs. Time')
+ax.set_xlabel('Time')
+ax.set_ylabel('Energy')
 
 #alpha = 10
 #kPlot = np.fft.fft(psiPlot)
