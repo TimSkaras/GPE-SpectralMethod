@@ -62,7 +62,7 @@ faradayTest = simulation.Simulation(gridDim, regionDim, startEnd, trapVars, gVar
 # Load Ground State from File
 psi_init = xp.asarray(faradayTest.loadSolution('../GroundStateSave/gs1.txt'))
 
-omega_list = [1.8, 1.85, 1.95, 2.0, 2.05, 2.1, 2.15, 2.2]
+omega_list = [1.8, 1.85, 1.9, 1.95, 2.0, 2.05, 2.1, 2.15, 2.2]
 kmax_list = np.array([])
 tmax_list = np.array([])
 
@@ -94,13 +94,31 @@ ax.set_xlabel(r'$\omega/\omega_\rho$')
 ax.set_ylabel(r'$k_{max}$')
 ax.set_title('Dominant Mode vs. Scattering Length Modulation Frequency')
 ax.legend(['Numerical', 'Analytic'])
+ax.grid()
 
 fig, ax = plt.subplots()
 ax.plot(omega_list, tmax_list)
 ax.set_xlabel(r'$\omega/\omega_\rho$')
 ax.set_ylabel(r'$t_{max}$')
 ax.set_title('Time to Max Amplitude vs. Scattering Length Modulation Frequency')
+ax.grid()
 
+fig = plt.figure()
+ax = plt.axes(xlim=(1.8,2.2), ylim=(0, 1.))
+ax.plot(omega_list, kmax_list /1.74)
+ax.plot(omega_list, 1.1*np.ones(len(omega_list))/1.74)
+ax.set_xlabel(r'$\omega/\omega_\rho$')
+ax.set_ylabel(r'$k_{max}$ $(\mu$m$^{-1})$')
+ax.set_title('Dominant Mode vs. Scattering Length Modulation Frequency')
+ax.legend(['Numerical', 'Analytic'])
+ax.grid()
+
+fig, ax = plt.subplots()
+ax.plot(omega_list, tmax_list * 0.334)
+ax.set_xlabel(r'$\omega/\omega_\rho$')
+ax.set_ylabel(r'$t_{max}$ (ms)')
+ax.set_title('Time to Max Amplitude vs. Scattering Length Modulation Frequency')
+ax.grid()
 
 #dV = faradayTest.hx*faradayTest.hy*faradayTest.hz
 #normInit = np.sum(np.abs(psi_init)**2)*dV
