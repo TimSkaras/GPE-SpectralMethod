@@ -195,7 +195,7 @@ class Simulation:
         xp = cp.get_array_module(waveFunction)        
         return xp.sum(xp.abs(waveFunction)**2, axis=(0,1))*self.hx*self.hy
     
-    def realTimeProp(self, solution, outputFinalAns = False, outputEnergyPlot = False):
+    def realTimeProp(self, solution, outputFinalAns = False, outputEnergyPlot = False, output3D=False):
         """
         This function numerically solves the GPE in real time using the spectral method
         
@@ -207,6 +207,7 @@ class Simulation:
         xp = cp.get_array_module(solution)
         
         psiPlot = np.array([cp.asnumpy(self.reduceIntegrate(solution))]) # Index Convention: psiPlot[time idx][space idx]
+        psiPlot3D = cp.asnumpy(xp.sum(xp.abs(solution)**2, axis=(0))*self.hx)
         mux = 2*xp.pi/self.LX * xp.arange(-self.NX/2, self.NX/2)
         muy = 2*xp.pi/self.LY * xp.arange(-self.NY/2, self.NY/2)
         muz = 2*xp.pi/self.LZ * xp.arange(-self.NZ/2, self.NZ/2)
@@ -236,12 +237,15 @@ class Simulation:
             
             # Save Solution for plotting
             psiPlot = np.vstack((psiPlot, cp.asnumpy(self.reduceIntegrate(solution)))) 
-        
+            if output3D and p % (1 if self.TIME_PTS <= 1000 else self.TIME_PTS//1000) == 0:
+                psiPlot3D = np.dstack((psiPlot3D, cp.asnumpy(xp.sum(xp.abs(solution)**2, axis=(0))*self.hx)))
         output = [psiPlot]
         if outputFinalAns:
             output.append(cp.asnumpy(solution))
         if outputEnergyPlot:
             output.append(energyPlot)
+        if output3D:
+            output.append(psiPlot3D)
         
         return output
     
@@ -384,6 +388,8 @@ class Simulation:
         
         if savePath:
             anim.save(savePath, fps=120, dpi=150)
+    
+
     
     # -------------------------- Mode Analysis --------------------------------
 

@@ -9,7 +9,6 @@ import numba
 from numba import jit
 import simulation
 
-
 # Spatial Points
 N = 64
 NX = 32
