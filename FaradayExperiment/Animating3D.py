@@ -14,7 +14,7 @@ N = 64
 NX = 32
 NY = 32
 NZ = 512
-TIME_PTS = 140
+TIME_PTS = 14000
 
 gridDim = np.array([NX, NY, NZ, TIME_PTS])
 
@@ -23,7 +23,7 @@ L = 15.0
 LX = 12.0
 LY = 12.0
 LZ = 375.0
-TIME = 3.50
+TIME = 350.
 
 regionDim = np.array([LX, LY, LZ, TIME])
 
@@ -67,15 +67,15 @@ psi_init = xp.asarray(faradayTest.loadSolution('../GroundStateSave/gs1.txt'))
 
 #faradayTest.surfPlot(psiPlot)
 
-savePath = '../Animations/ModulatingPotential.mp4'
+savePath = '../Animations/ModulatingPotential1D.mp4'
 
 #faradayTest.animateSol(psiPlot[::3,:], savePath)
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
-z = psiPlot3D[:,:,0]
-#line = ax.plot_wireframe(xx, yy, z,color= 'b', rcount=30, ccount=40)
-line = ax.imshow(psiPlot3D[:,:,0], cmap='hot', interpolation='nearest', extent=[za, zb, xa,xb], aspect=2)
+#fig = plt.figure()
+#ax = fig.add_subplot(111)
+#z = psiPlot3D[:,:,0]
+##line = ax.plot_wireframe(xx, yy, z,color= 'b', rcount=30, ccount=40)
+#line = ax.imshow(psiPlot3D[:,:,0], cmap='hot', interpolation='nearest', extent=[za, zb, xa,xb], aspect=2)
 
 def data(i, z, line):
     z = psiPlot3D[:,:,i]
@@ -87,8 +87,8 @@ def data(i, z, line):
     ax.set_title(f'time = {TIME/(TIME_PTS+1 if TIME_PTS <=1000 else 1001) * i:3.3f}')
     return line,
 
-ani = animation.FuncAnimation(fig, data, fargs=(z, line), interval=90, blit=False, frames= (TIME_PTS+1 if TIME_PTS <=1000 else 1001))
-ani.save(savePath, fps=25, dpi=200)
+#ani = animation.FuncAnimation(fig, data, fargs=(z, line), interval=90, blit=False, frames= (TIME_PTS+1 if TIME_PTS <=1000 else 1001))
+#ani.save('../Animations/ModulatingPotentialHeatMap.mp4', fps=25, dpi=200)
     
 #fig = plt.figure()
 #ax = fig.gca(projection='3d')

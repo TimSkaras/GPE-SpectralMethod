@@ -214,6 +214,7 @@ We have computationally simulated a condensate with these conditions where $\ome
 \end{figure}
 
 \subsection{Computational Results}
+\label{subsec:CompResults}
 
 Now, we analyze computational results that can be directly compared with experiment. Due to limitations on instrument precision in the laboratory, certain properties of the BEC cannot be measured. The results that can be compared with experimental measurement include: (1) how the time it takes for the the dominant mode to reach its maximum amplitude varies with the scattering length modulation frequency $\omega$ and (2) how the wavenumber of the dominant mode varies with $\omega$.
 
@@ -250,6 +251,19 @@ Next, we look at how the wavenumber of the dominant mode varies with $\omega$. T
 \end{figure}
 
 %There are two ways that we can define the ``dominant mode": the mode that reaches the maximum amplitude first and the mode that has the largest amplitude as the spatial perturbations leave the domain of validity. The analytic predictions for predicting what mode has the fastest growth rate \cite{mustafa} assume that the amplitude of each mode is small. This simplifies the analysis because it also means that the each of the spatial perturbation modes will grow independently of each other and not be coupled. When the amplitude of one or more mores has grown sufficiently large, this assumption no longer holds and the analytic predictions are cannot reliably predict behavior. The ``domain of validity" is the time frame in which this assumption of uncoupled modes still holds
+
+\subsection{Island Formation}
+
+One notable phenomenon in the animations that we have produced from these simulations is that modulating the scattering length produces an ``island" or isolated accumulation of atoms to the left and right of the central cloud. For simulations with the parameters given in subsection \ref{subsec:CompResults}, the islands tend to form around $t = 285$ as illustrated in figure \ref{fig:islands1}. The full 1D animation of these dynamics can be viewed \href{https://github.com/TimSkaras/GPE-SpectralMethod/blob/master/Animations/CodnensateAnimation.mp4}{here}. Additionally, we have created a 2D animation of the same simulation, though now displayed as a heat map, which can be viewed \href{https://github.com/TimSkaras/GPE-SpectralMethod/blob/master/Animations/heatMapIslands.mp4}{here}. I speculate the the island formation is the result of the periodic expansion and contraction of the atomic cloud and the growth of spatial patterns on the BEC surface that results from this expansion and contraction, rather than being directly caused by the periodic modulation of the scattering length \textit{per se}. 
+
+At the very least, it can be shown that this expansion and contraction can also be produced by modulating the potential for a fixed period of time, which also ultimately produces similar dynamics by causing the atomic cloud to expand and contract. In this 1D \href{}{animation} and in this 2D heat map \href{}{animation}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.6]{IslandFormation1D}
+\caption{This plot shows the islands around the time when they first form after the scattering length has been modulated at the resonant frequency. This plot shows the number density of atoms along the z-axis when $t = 285$.}
+\label{fig:islands1}
+\end{figure}
 
 \bibliographystyle{abbrv}
 \bibliography{FaradayExperimentBib}

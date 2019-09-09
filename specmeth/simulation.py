@@ -215,11 +215,12 @@ class Simulation:
         muExpTerm = xp.fft.ifftshift(muExpTerm)
         
         energyPlot = np.array([self.getEnergy(solution)])
+        modFunc = lambda t: (1.0 + 0.0*np.sin(2*t)) if t < 5*np.pi else 1
             
         for p in range(self.TIME_PTS):
             
             # Step One -- potential and interaction term
-            expTerm = xp.exp(-1j* (self.potential + self.scatLen(p*self.dt)*xp.abs(solution)**2)*self.dt/2.0)
+            expTerm = xp.exp(-1j* (self.potential*modFunc(p*self.dt) + self.scatLen(p*self.dt)*xp.abs(solution)**2)*self.dt/2.0)
             solution = expTerm*solution
                         
             # Step Two -- kinetic term
@@ -228,7 +229,7 @@ class Simulation:
             solution = xp.fft.ifftn(fourierCoeffs)
             
             # Step Three -- potential and interaction term again
-            expTerm = xp.exp(-1j* (self.potential + self.scatLen((p + 0.5)*self.dt)*xp.abs(solution)**2)*self.dt/2.0)
+            expTerm = xp.exp(-1j* (self.potential*modFunc((p + 0.5)*self.dt) + self.scatLen((p + 0.5)*self.dt)*xp.abs(solution)**2)*self.dt/2.0)
             solution = expTerm*solution
             
             # Calculate energy if necessary
