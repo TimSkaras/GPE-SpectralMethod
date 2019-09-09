@@ -14,7 +14,7 @@ N = 64
 NX = 32
 NY = 32
 NZ = 512
-TIME_PTS = 1400
+TIME_PTS = 140
 
 gridDim = np.array([NX, NY, NZ, TIME_PTS])
 
@@ -23,7 +23,7 @@ L = 15.0
 LX = 12.0
 LY = 12.0
 LZ = 375.0
-TIME = 35.0
+TIME = 3.50
 
 regionDim = np.array([LX, LY, LZ, TIME])
 
@@ -61,36 +61,40 @@ faradayTest = simulation.Simulation(gridDim, regionDim, startEnd, trapVars, gVar
 # Load Ground State from File
 psi_init = xp.asarray(faradayTest.loadSolution('../GroundStateSave/gs1.txt'))
 
-[psiPlot, psiPlot3D] = faradayTest.realTimeProp(psi_init, output3D=True)
+[psiPlot, FinalAns, psiPlot3D] = faradayTest.realTimeProp(psi_init, outputFinalAns=True, output3D=True)
 
-
+#v = np.real(1/(2j)*(np.conj(FinalAns)*np.gradient(FinalAns) - FinalAns*np.gradient(np.conj(FinalAns))) )
 
 #faradayTest.surfPlot(psiPlot)
 
-savePath = '../Animations/animation.mp4'
+savePath = '../Animations/ModulatingPotential.mp4'
 
 #faradayTest.animateSol(psiPlot[::3,:], savePath)
 
 fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-x1 = cp.asnumpy(faradayTest.x.reshape((1,NX)))
-z1 = cp.asnumpy(faradayTest.z.reshape((1,NZ)))
-xx,yy = np.meshgrid(z1,x1)
+ax = fig.add_subplot(111)
 z = psiPlot3D[:,:,0]
-line = ax.plot_wireframe(xx, yy, z,color= 'b')
-ax.set_title("2D Text")
+#line = ax.plot_wireframe(xx, yy, z,color= 'b', rcount=30, ccount=40)
+line = ax.imshow(psiPlot3D[:,:,0], cmap='hot', interpolation='nearest', extent=[za, zb, xa,xb], aspect=2)
 
 def data(i, z, line):
     z = psiPlot3D[:,:,i]
     ax.clear()
-    ax.set_ylim3d(xa, xb)
-    ax.set_xlim3d(za,zb)
-    ax.set_zlim3d(0,.005)
-    line = ax.plot_wireframe(xx, yy, z,color= 'b')
-    ax.set_title(f'time = {TIME/TIME_PTS * i:3.3f}')
+#    ax.set_ylim3d(xa, xb)
+#    ax.set_xlim3d(za,zb)
+#    ax.set_zlim3d(0,.005)
+    line = ax.imshow(z, cmap='hot', interpolation='nearest', extent=[za, zb, xa,xb], aspect=2)
+    ax.set_title(f'time = {TIME/(TIME_PTS+1 if TIME_PTS <=1000 else 1001) * i:3.3f}')
     return line,
 
-ani = animation.FuncAnimation(fig, data, fargs=(z, line), interval=90, blit=False, frames=TIME_PTS+1 if TIME_PTS <=1000 else 1000)
-ani.save('../Animations/animation3D.mp4', fps=40, dpi=200)
+ani = animation.FuncAnimation(fig, data, fargs=(z, line), interval=90, blit=False, frames= (TIME_PTS+1 if TIME_PTS <=1000 else 1001))
+ani.save(savePath, fps=25, dpi=200)
+    
+#fig = plt.figure()
+#ax = fig.gca(projection='3d')
+    
+#ax.quiver(X[::4,::4,::32], Z[::4,::4,::32], Y[::4,::4,::32], 
+#          v[0,::4,::4,::32], v[2,::4,::4,::32], v[1,::4,::4,::32], 
+#          length=0.4, normalize=True)
 
 plt.show()
